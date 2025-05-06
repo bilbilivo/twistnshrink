@@ -1,0 +1,17 @@
+*.pyc
+*DEV.py
+*DEV.html
+*DEV.json
+*DEV.zip
+log/*
+input/*
+output/*
+venv/*
+build/*
+dist/*
+pic_resizer.zip
+!input/*_inputList.txt
+!input/required_files_(overrides_above)*TEST*.xlsx
+!input/*template*.xlsx
+input/unwanted_files_(overrides_the_override_above)*TEST*xlsx
+*test*.py
