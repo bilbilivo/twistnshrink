@@ -8,7 +8,6 @@ input/*
 output/*
 venv/*
 build/*
-dist/*
 pic_resizer.zip
 !input/*_inputList.txt
 !input/required_files_(overrides_above)*TEST*.xlsx
