@@ -136,11 +136,11 @@ def resize_images():
 
                     # Preserve EXIF data
                     exif_dict = piexif.load(img.info.get("exif", b""))
-                    
+
                     # Remove orientation tag from EXIF
                     if piexif.ImageIFD.Orientation in exif_dict["0th"]:
                         del exif_dict["0th"][piexif.ImageIFD.Orientation]
-                    
+
                     exif_bytes = piexif.dump(exif_dict)
 
                     # Resize
@@ -161,31 +161,31 @@ def resize_images():
                     name, ext = os.path.splitext(filename)
                     new_filename = f"{name}{suffix}{ext}"
                     output_path = os.path.join(output_dir, new_filename)
-                    
+
                     with open(output_path, 'wb') as f:
                         f.write(img_data)
                 count += 1
-                progress_bar['value'] = (count / total) * 100
-                progress_label['text'] = f"Processing image {count} of {total}"
-                progress_window.update()
+                c, t = count, total  # capture for closure
+                progress_window.after(0, lambda c=c, t=t: (
+                    progress_bar.__setitem__('value', (c / t) * 100),
+                    progress_label.__setitem__('text', f"Processing image {c} of {t}")
+                ))
             except Exception as e:
                 failures.append(f"{img_path}: {str(e)}")
-                # print(f"Error processing {img_path}: {str(e)}")
 
-        progress_window.destroy()
-        
-        
-        # Generate message for completion
-        # messagebox.showinfo("Complete", f"Resized {count} images successfully!")
-        if failures:
-            failure_report = "\n".join(failures)
-            messagebox.showwarning(
-                "Processing Complete", 
-                f"Processed {count}/{total} images successfully.\n\n"
-                f"The following images failed:\n{failure_report}"
-            )
-        else:
-            messagebox.showinfo("Complete", f"Successfully resized {count}/{total} images!")
+        def finish():
+            progress_window.destroy()
+            if failures:
+                failure_report = "\n".join(failures)
+                messagebox.showwarning(
+                    "Processing Complete",
+                    f"Processed {count}/{total} images successfully.\n\n"
+                    f"The following images failed:\n{failure_report}"
+                )
+            else:
+                messagebox.showinfo("Complete", f"Successfully resized {count}/{total} images!")
+
+        progress_window.after(0, finish)
 
     # Run image processing in a separate thread
     threading.Thread(target=process_images, daemon=True).start()
@@ -243,14 +243,19 @@ def rotate_images():
                     output_path = os.path.join(output_dir, new_filename)
                     rotated_img.save(output_path)
                 count += 1
-                progress_bar['value'] = (count / total) * 100
-                progress_label['text'] = f"Rotating image {count} of {total}"
-                progress_window.update()
+                c, t = count, total  # capture for closure
+                progress_window.after(0, lambda c=c, t=t: (
+                    progress_bar.__setitem__('value', (c / t) * 100),
+                    progress_label.__setitem__('text', f"Rotating image {c} of {t}")
+                ))
             except Exception as e:
                 print(f"Error processing {img_path}: {str(e)}")
 
-        progress_window.destroy()
-        messagebox.showinfo("Complete", f"Rotated {count} images successfully!")
+        def finish():
+            progress_window.destroy()
+            messagebox.showinfo("Complete", f"Rotated {count} images successfully!")
+
+        progress_window.after(0, finish)
 
     # Run image rotation in a separate thread
     threading.Thread(target=process_images, daemon=True).start()
