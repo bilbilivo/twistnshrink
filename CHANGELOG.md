@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 
 ## [Unreleased]
 
+### Changed
+
+- CI workflow now ignores markdown and documentation files on push and pull request events to improve efficiency
+
 ## [2026.2] - 2026-02-17
 
 ### Fixed
