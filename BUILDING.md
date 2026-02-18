@@ -2,13 +2,14 @@
 
 Use [PyInstaller](https://pyinstaller.org/) to bundle the application into a standalone `.exe`.
 
+> **Note:** Releases are built automatically by GitHub Actions when you push a version tag (e.g., `v2026.1`). The `.exe` is attached to the [GitHub Release](https://github.com/bilbilivo/pic_resizer/releases). Manual builds are only needed for local testing.
+
 ## Prerequisites
 
 Install PyInstaller and the project dependencies:
 
 ```bash
-pip install pyinstaller
-pip install -r requirements.txt
+pip install ".[build]"
 ```
 
 ## Build
@@ -39,6 +40,21 @@ pyinstaller pic_resizer.spec
 ## Output
 
 The executable will be created at `dist/pic_resizer.exe`. Copy `pic_resizer.ini` into the same directory if you want to ship default settings alongside it.
+
+## Automated Builds (CI)
+
+When you push a git tag matching `v*` (e.g., `v2026.1`), the [release workflow](.github/workflows/release.yml) will:
+
+1. Run lint and test checks.
+2. Build the Windows `.exe` on a Windows runner.
+3. Create a GitHub Release with the `.exe` attached.
+
+To create a release:
+
+```bash
+git tag v2026.1
+git push origin v2026.1
+```
 
 ## Troubleshooting
 

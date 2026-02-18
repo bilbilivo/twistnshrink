@@ -14,9 +14,15 @@ Thanks for your interest in contributing! Here's how to get started.
 2. Create a virtual environment and install dependencies:
 
    ```bash
+   # Linux / macOS
    python3 -m venv venv
-   source venv/bin/activate   # Linux/macOS
-   pip install -r requirements.txt
+   source venv/bin/activate
+   pip install ".[dev]"
+
+   # Windows
+   python -m venv venv
+   venv\Scripts\activate
+   pip install ".[dev]"
    ```
 
 3. Make sure `python3-tk` is installed on your system (see [README.md](README.md#installation)).
@@ -37,16 +43,30 @@ Thanks for your interest in contributing! Here's how to get started.
 
 2. Make your changes. Keep commits focused and write clear commit messages.
 
-3. Test your changes manually with a variety of JPEG images (with and without EXIF data, different orientations, different sizes).
+3. Run the linter and tests before pushing:
 
-4. Push your branch and open a pull request.
+   ```bash
+   ruff check .
+   pytest -v
+   ```
+
+4. Test your changes manually with a variety of JPEG images (with and without EXIF data, different orientations, different sizes).
+
+5. Push your branch and open a pull request.
 
 ## Code Style
 
 - Follow [PEP 8](https://peps.python.org/pep-0008/) conventions.
+- Run `ruff check .` to lint your code (configuration is in `pyproject.toml`).
 - Add type hints to all function signatures.
 - Add docstrings to all public functions.
-- Keep the codebase compatible with Python 3.7+.
+- Keep the codebase compatible with Python 3.9+.
+
+## Testing
+
+- Add tests for new logic in the `tests/` directory.
+- Tests use [pytest](https://docs.pytest.org/) -- run with `pytest -v`.
+- CI runs the test suite on Python 3.9, 3.10, 3.11, and 3.12.
 
 ## Reporting Issues
 

@@ -2,9 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/). This project uses [calendar versioning](https://calver.org/) in the format `YYYY.##` (e.g., `2026.1`, `2026.2`).
 
 ## [Unreleased]
+
+## [2026.1] - 2026-02-17
+
+### Added
+- Unit test suite with pytest covering image processing and configuration functions.
+- GitHub Actions CI workflow (lint with ruff, test with pytest on Python 3.9-3.12).
+- GitHub Actions release workflow -- automatically builds Windows `.exe` and publishes to GitHub Releases on tag push.
+- `[build-system]` table and `[project.optional-dependencies]` in `pyproject.toml`.
+- pytest configuration in `pyproject.toml`.
+- Module docstring and function docstrings throughout `pic_resizer.py`.
+- Type hints on all functions.
+- `if __name__ == "__main__"` guard so the module can be imported without launching the GUI.
+- `CONTRIBUTING.md` with contribution guidelines.
+- `CHANGELOG.md` (this file).
+- `BUILDING.md` with PyInstaller build instructions (replaces `convert_to_exe.txt`).
+- `pyproject.toml` with project metadata and ruff linter configuration.
 
 ### Fixed
 - Config file path is now resolved relative to the script location, not the working directory.
@@ -13,17 +29,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Rotate operation now preserves EXIF metadata (previously it was silently stripped).
 
 ### Changed
+- Minimum Python version bumped from 3.7 to 3.9.
 - Config file is only rewritten when missing keys are detected (previously rewritten on every launch).
 - Default config values are defined in a single place (`DEFAULT_CONFIG` dict) to avoid duplication.
 - JPEG quality parameters (initial, floor, step) are now named constants.
 - Dependencies in `requirements.txt` are now pinned to compatible version ranges.
 - Improved `.gitignore` with comprehensive patterns for Python, IDE, and OS files.
-
-### Added
-- Module docstring and function docstrings throughout `pic_resizer.py`.
-- Type hints on all functions.
-- `if __name__ == "__main__"` guard so the module can be imported without launching the GUI.
-- `CONTRIBUTING.md` with contribution guidelines.
-- `CHANGELOG.md` (this file).
-- `BUILDING.md` with PyInstaller build instructions (replaces `convert_to_exe.txt`).
-- `pyproject.toml` with project metadata and ruff linter configuration.
+- `dist/pic_resizer.exe` removed from version control; distributed via GitHub Releases instead.
+- `pic_resizer.ini` added to `.gitignore` (runtime-generated file).

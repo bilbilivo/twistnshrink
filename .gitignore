@@ -41,6 +41,7 @@ Thumbs.db
 log/
 input/
 output/
+pic_resizer.ini
 
 # Generated files
 pic_resizer.png

@@ -1,6 +1,14 @@
 # Pic Resizer
 
+[![CI](https://github.com/bilbilivo/pic_resizer/actions/workflows/ci.yml/badge.svg)](https://github.com/bilbilivo/pic_resizer/actions/workflows/ci.yml)
+
 Batch image resizer and rotator with a tkinter GUI. Resizes JPEGs to a target file size and max dimension, preserving EXIF data. Also supports batch rotation. Works on Linux, macOS, and Windows.
+
+## Download
+
+**Windows** -- Download the latest `pic_resizer.exe` from the [Releases page](https://github.com/bilbilivo/pic_resizer/releases).
+
+**Linux / macOS** -- Run from source (see [Installation](#installation) below).
 
 ## Features
 
@@ -12,7 +20,7 @@ Batch image resizer and rotator with a tkinter GUI. Resizes JPEGs to a target fi
 
 ## Requirements
 
-- Python 3.7+
+- Python 3.9+
 - `python3-tk` (system package -- see installation below)
 
 ## Installation
@@ -54,9 +62,12 @@ The launcher will:
 
 ### Windows
 
-Double-click `dist/pic_resizer.exe`, or run from the command line:
+Download the `.exe` from the [Releases page](https://github.com/bilbilivo/pic_resizer/releases), or run from source:
 
 ```cmd
+python -m venv venv
+venv\Scripts\activate
+pip install .
 python pic_resizer.py
 ```
 
@@ -81,9 +92,25 @@ Settings are stored in `pic_resizer.ini` (created automatically on first run):
 | `FileSuffix` | `_resize` | Suffix appended to output filenames |
 | `RotateAngle` | `90` | Default rotation angle (90, 180, or 270) |
 
+## Development
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install ".[dev]"
+
+# Lint
+ruff check .
+
+# Run tests
+pytest -v
+```
+
 ## Building a Windows Executable
 
 See [BUILDING.md](BUILDING.md) for instructions on creating a standalone `.exe` with PyInstaller.
+
+Releases are also built automatically via GitHub Actions when a version tag is pushed.
 
 ## Contributing
 

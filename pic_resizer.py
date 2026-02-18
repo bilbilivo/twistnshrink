@@ -10,12 +10,16 @@ import configparser
 import io
 import os
 import threading
-import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
 from typing import Optional
 
 import piexif
-from PIL import Image, ExifTags
+from PIL import ExifTags, Image
+
+try:
+    import tkinter as tk
+    from tkinter import filedialog, messagebox, ttk
+except ImportError:  # allow importing image-processing helpers without tkinter
+    tk = None  # type: ignore[assignment]
 
 # ---------------------------------------------------------------------------
 # Constants
