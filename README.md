@@ -45,7 +45,22 @@ sudo dnf install python3-tkinter
 brew install python-tk
 ```
 
-The launcher handles virtual environment creation and dependency installation automatically on first run.
+The launcher handles virtual environment creation and dependency installation automatically on first run using dependencies from pyproject.toml (PEP 621).
+
+The launcher will use `pip install .` according to the dependencies declared in your `pyproject.toml` (requires pip 23.1+).
+
+To upgrade pip in your virtual environment if needed:
+
+```
+pip install --upgrade "pip>=23.1"
+```
+
+If you encounter dependency errors, check your pip version with:
+```
+pip --version
+```
+You should see 23.1 or higher for PEP 621 compliance.
+
 
 ## Usage
 
@@ -57,7 +72,7 @@ The launcher handles virtual environment creation and dependency installation au
 
 The launcher will:
 1. Create a Python virtual environment (first run only)
-2. Install dependencies from `requirements.txt`
+2. Install dependencies from `pyproject.toml` using pip 23.1+
 3. Launch the GUI
 
 ### Windows

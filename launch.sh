@@ -18,10 +18,16 @@ fi
 
 setup_venv() {
     if [ ! -d "$VENV_DIR" ]; then
-        echo "First run — creating virtual environment..."
+        echo "First run  creating virtual environment..."
         "$PYTHON" -m venv "$VENV_DIR"
-        echo "Installing dependencies..."
-        "$VENV_DIR/bin/pip" install -r "$SCRIPT_DIR/requirements.txt"
+        # Check pip version for PEP 621 support (must be at least 23.1)
+        PIP_VER=$("$VENV_DIR/bin/pip" --version | awk '{print $2}')
+        if [[ $(echo -e "$PIP_VER\n23.1" | sort -V | head -n1) != "23.1" ]]; then
+            echo "Upgrading pip to version 23.1 or higher for pyproject.toml/PEP 621 support..."
+            "$VENV_DIR/bin/pip" install --upgrade "pip>=23.1"
+        fi
+        echo "Installing dependencies from pyproject.toml..."
+        "$VENV_DIR/bin/pip" install .
     fi
 }
 
