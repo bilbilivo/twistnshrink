@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 
 ## [Unreleased]
 
+## [2026.5] - 2026-02-18
+
+### Fixed
+- Linux (GNOME/Ubuntu) app launcher now installs its .desktop file to the correct directory (`~/.local/share/applications/`), ensuring the app can be launched from the Applications menu. The prior approach (leaving the .desktop file in the repo) often failed to register with desktop environments.
 ## [2026.4] - 2026-02-18
 
 ### Added
