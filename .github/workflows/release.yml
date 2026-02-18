@@ -81,11 +81,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: pic_resizer-windows
-          path: release-assets/
+          path: release-assets
+
+      - name: List files in release-assets
+        run: ls -R release-assets
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-          files: |
-            release-assets/pic_resizer.exe
+          fail_on_unmatched_files: true
+          files: release-assets/pic_resizer.exe
