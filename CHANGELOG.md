@@ -6,9 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 
 ## [Unreleased]
 
-### Changed
+## [2026.4] - 2026-02-18
 
-- CI workflow now ignores markdown and documentation files on push and pull request events to improve efficiency
+### Added
+- Comprehensive release workflow documentation in BUILDING.md and CONTRIBUTING.md.
+
+### Changed
+- CI workflow now ignores markdown and documentation files on push and pull request events to improve efficiency.
+- GUI: Shortened window title and aligned resize/rotate section buttons for improved visual consistency.
 
 ## [2026.2] - 2026-02-17
 
