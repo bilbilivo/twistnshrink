@@ -71,15 +71,21 @@ pip install .
 python pic_resizer.py
 ```
 
-### Desktop Shortcut (Linux)
+### Application Launcher (Linux)
 
-Create a double-clickable desktop shortcut:
+Add Pic Resizer to your desktop application launcher (e.g., GNOME Activities):
 
 ```bash
-./launch.sh setup
+./launch.sh install
 ```
 
-This converts the icon and generates a `.desktop` file in the repo folder.
+Then search for **Pic Resizer** in your application menu.
+
+To remove it:
+
+```bash
+./launch.sh uninstall
+```
 
 ## Configuration
 

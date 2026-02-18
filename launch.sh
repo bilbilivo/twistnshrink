@@ -25,7 +25,7 @@ setup_venv() {
     fi
 }
 
-setup() {
+install() {
     setup_venv
 
     ICON_PNG="$SCRIPT_DIR/pic_resizer.png"
@@ -37,20 +37,44 @@ Image.open('$SCRIPT_DIR/pic_resizer.ico').save('$ICON_PNG', 'PNG')
 "
     fi
 
-    DESKTOP_FILE="$SCRIPT_DIR/pic_resizer.desktop"
+    APPS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+    mkdir -p "$APPS_DIR"
+    DESKTOP_FILE="$APPS_DIR/pic-resizer.desktop"
+
     cat > "$DESKTOP_FILE" << EOF
 [Desktop Entry]
 Type=Application
 Name=Pic Resizer
 Comment=Batch image resizer and rotator
 Icon=$ICON_PNG
-Exec="$SCRIPT_DIR/launch.sh"
+Exec=$SCRIPT_DIR/launch.sh
 Terminal=false
+Categories=Graphics;
+StartupWMClass=pic_resizer
 EOF
 
-    chmod +x "$DESKTOP_FILE"
-    echo "Desktop shortcut created: $DESKTOP_FILE"
-    echo "Double-click it from this folder to launch."
+    # Refresh the desktop database so the launcher picks up the new entry
+    if command -v update-desktop-database &>/dev/null; then
+        update-desktop-database "$APPS_DIR" 2>/dev/null || true
+    fi
+
+    echo "Installed: $DESKTOP_FILE"
+    echo "Search 'Pic Resizer' in your application launcher to start."
+}
+
+uninstall() {
+    APPS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+    DESKTOP_FILE="$APPS_DIR/pic-resizer.desktop"
+
+    if [ -f "$DESKTOP_FILE" ]; then
+        rm "$DESKTOP_FILE"
+        if command -v update-desktop-database &>/dev/null; then
+            update-desktop-database "$APPS_DIR" 2>/dev/null || true
+        fi
+        echo "Removed: $DESKTOP_FILE"
+    else
+        echo "Nothing to remove (not installed)."
+    fi
 }
 
 ACTION="${1:-launch}"
@@ -59,13 +83,17 @@ case "$ACTION" in
         setup_venv
         exec "$VENV_DIR/bin/python" pic_resizer.py
         ;;
-    setup)
-        setup
+    install)
+        install
+        ;;
+    uninstall)
+        uninstall
         ;;
     *)
-        echo "Usage: $0 {launch|setup}"
-        echo "       launch   Start pic_resizer (default)"
-        echo "       setup    Create a desktop shortcut"
+        echo "Usage: $0 {launch|install|uninstall}"
+        echo "       launch      Start pic_resizer (default)"
+        echo "       install     Add to application launcher"
+        echo "       uninstall   Remove from application launcher"
         exit 2
         ;;
 esac
