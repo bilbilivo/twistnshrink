@@ -112,6 +112,10 @@ See [BUILDING.md](BUILDING.md) for instructions on creating a standalone `.exe` 
 
 Releases are also built automatically via GitHub Actions when a version tag is pushed.
 
+**Release workflow best practice:**
+- Before pushing a version tag, always push your changes to `main` and wait for all CI checks (GitHub Actions) to pass.
+- Only after verifying that `main` is green, create and push the version tag (see [CONTRIBUTING.md](CONTRIBUTING.md) for details).
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.

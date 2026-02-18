@@ -68,6 +68,19 @@ Thanks for your interest in contributing! Here's how to get started.
 - Tests use [pytest](https://docs.pytest.org/) -- run with `pytest -v`.
 - CI runs the test suite on Python 3.9, 3.10, 3.11, and 3.12.
 
+## Release Workflow & Tagging Expectations
+
+Before creating a release (by pushing a tag such as `v2026.2` or a release branch):
+
+1. Push changes to `main` first.
+2. Wait for all CI workflows to complete and ensure they pass (see Actions tab in GitHub).
+3. Only then, create and push a release tag (e.g., `git tag v2026.2 && git push origin v2026.2`).
+
+> **Why?**
+> This ensures releases are only created from a healthy, passing main branch, prevents accidental deployment of broken code, and makes releases easier to audit and roll back.
+
+If CI fails on `main`, do not tag or deploy—fix issues and re-verify first.
+
 ## Reporting Issues
 
 - Use [GitHub Issues](https://github.com/bilbilivo/pic_resizer/issues) to report bugs or request features.

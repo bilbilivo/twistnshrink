@@ -43,13 +43,17 @@ The executable will be created at `dist/pic_resizer.exe`. Copy `pic_resizer.ini`
 
 ## Automated Builds (CI)
 
+**Important release workflow best practice:**
+
+> Before pushing a version tag to trigger a release build, always push to `main`, wait for all CI checks to pass (see GitHub Actions), and only then create and push the version tag. This ensures the release is created from a fully tested, healthy main branch.
+
 When you push a git tag matching `v*` (e.g., `v2026.1`), the [release workflow](.github/workflows/release.yml) will:
 
 1. Run lint and test checks.
 2. Build the Windows `.exe` on a Windows runner.
 3. Create a GitHub Release with the `.exe` attached.
 
-To create a release (ensure the tag version matches the push command):
+To create a release (ensure the tag version matches the push command and only do this after CI passes on main):
 
 ```bash
 git tag v2026.2
