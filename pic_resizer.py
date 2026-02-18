@@ -383,7 +383,7 @@ def main() -> None:
     config = load_config()
 
     root = tk.Tk()
-    root.title("Batch Image Resizer and Rotator")
+    root.title("Batch Pic Resizer")
 
     # Configure style
     style = ttk.Style()
@@ -393,24 +393,27 @@ def main() -> None:
     # Create and pack widgets
     frame = ttk.Frame(root, padding="10")
     frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+    # Make both columns expandable for button alignment
+    frame.columnconfigure(0, weight=1)
+    frame.columnconfigure(1, weight=1)
 
     # Resize section
     ttk.Label(frame, text="Max Frame Size:").grid(row=0, column=0, sticky=tk.W, pady=5)
     max_frame_size_entry = ttk.Entry(frame, width=20)
     max_frame_size_entry.insert(0, config["DEFAULT"]["MaxFrameSize"])
-    max_frame_size_entry.grid(row=0, column=1, pady=5)
+    max_frame_size_entry.grid(row=0, column=1, pady=5, sticky=(tk.W, tk.E))
 
     ttk.Label(frame, text="Target Size (KB):").grid(
         row=1, column=0, sticky=tk.W, pady=5
     )
     target_size_entry = ttk.Entry(frame, width=20)
     target_size_entry.insert(0, config["DEFAULT"]["TargetSizeKB"])
-    target_size_entry.grid(row=1, column=1, pady=5)
+    target_size_entry.grid(row=1, column=1, pady=5, sticky=(tk.W, tk.E))
 
     ttk.Label(frame, text="File Suffix:").grid(row=2, column=0, sticky=tk.W, pady=5)
     suffix_entry = ttk.Entry(frame, width=20)
     suffix_entry.insert(0, config["DEFAULT"]["FileSuffix"])
-    suffix_entry.grid(row=2, column=1, pady=5)
+    suffix_entry.grid(row=2, column=1, pady=5, sticky=(tk.W, tk.E))
 
     resize_button = ttk.Button(
         frame,
@@ -418,41 +421,37 @@ def main() -> None:
         command=resize_images,
         style="TButton",
     )
-    resize_button.grid(row=3, column=0, columnspan=2, pady=20)
+    resize_button.grid(row=3, column=0, columnspan=2, pady=20, sticky=(tk.W, tk.E))
 
-    # Rotate section
-    rotate_frame = ttk.Frame(root, padding="10")
-    rotate_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-
-    ttk.Label(rotate_frame, text="Rotate Angle:").grid(
-        row=0, column=0, sticky=tk.W, pady=5
+    # Rotate section (now inside same frame)
+    ttk.Label(frame, text="Rotate Angle:").grid(
+        row=4, column=0, sticky=tk.W, pady=5
     )
     rotate_angle_var = tk.StringVar(value=config["DEFAULT"]["RotateAngle"])
     ttk.Radiobutton(
-        rotate_frame, text="90\u00b0", variable=rotate_angle_var, value="90"
-    ).grid(row=0, column=1, pady=5)
+        frame, text="90\u00b0", variable=rotate_angle_var, value="90"
+    ).grid(row=4, column=1, sticky=tk.W, pady=5)
     ttk.Radiobutton(
-        rotate_frame, text="180\u00b0", variable=rotate_angle_var, value="180"
-    ).grid(row=0, column=2, pady=5)
+        frame, text="180\u00b0", variable=rotate_angle_var, value="180"
+    ).grid(row=4, column=1, sticky=tk.N, pady=5, padx=(75,0))
     ttk.Radiobutton(
-        rotate_frame, text="270\u00b0", variable=rotate_angle_var, value="270"
-    ).grid(row=0, column=3, pady=5)
+        frame, text="270\u00b0", variable=rotate_angle_var, value="270"
+    ).grid(row=4, column=1, sticky=tk.E, pady=5)
 
     rotate_button = ttk.Button(
-        rotate_frame,
+        frame,
         text="Select and Rotate Images",
         command=rotate_images,
         style="TButton",
     )
-    rotate_button.grid(row=1, column=0, columnspan=4, pady=20)
+    rotate_button.grid(row=5, column=0, columnspan=2, pady=20, sticky=(tk.W, tk.E))
 
-    # Configure grid expansion
+    # Configure grid spacing
     for child in frame.winfo_children():
-        child.grid_configure(padx=5)
-    for child in rotate_frame.winfo_children():
         child.grid_configure(padx=5)
 
     root.mainloop()
+
 
 
 if __name__ == "__main__":
