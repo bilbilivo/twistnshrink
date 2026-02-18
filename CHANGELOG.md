@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 
 ## [Unreleased]
 
+## [2026.2] - 2026-02-17
+
+### Fixed
+
+- Fixed release workflow to ensure `.exe` file is uploaded correctly
+
 ## [2026.1] - 2026-02-17
 
 ### Added

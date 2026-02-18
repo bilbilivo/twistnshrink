@@ -49,11 +49,11 @@ When you push a git tag matching `v*` (e.g., `v2026.1`), the [release workflow](
 2. Build the Windows `.exe` on a Windows runner.
 3. Create a GitHub Release with the `.exe` attached.
 
-To create a release:
+To create a release (ensure the tag version matches the push command):
 
 ```bash
-git tag v2026.1
-git push origin v2026.1
+git tag v2026.2
+git push origin v2026.2
 ```
 
 ## Troubleshooting
