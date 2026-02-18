@@ -1,61 +1,120 @@
-import os
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
-from PIL import Image, ExifTags
-import io
-import piexif
-import threading
+"""Batch Image Resizer and Rotator.
+
+A tkinter GUI application for batch processing JPEG images.
+Supports resizing to a target file size / max dimension and rotating
+by 90, 180, or 270 degrees.  EXIF metadata is preserved in both
+operations.
+"""
+
 import configparser
+import io
+import os
+import threading
+import tkinter as tk
+from tkinter import filedialog, messagebox, ttk
+from typing import Optional
 
-# Load configuration
-config = configparser.ConfigParser()
-config_file = 'pic_resizer.ini'
+import piexif
+from PIL import Image, ExifTags
 
-if os.path.exists(config_file):
-    config.read(config_file)
-    # Check if all settings exist, if not, add them
-    if 'MaxFrameSize' not in config['DEFAULT']:
-        config['DEFAULT']['MaxFrameSize'] = '900'
-    if 'TargetSizeKB' not in config['DEFAULT']:
-        config['DEFAULT']['TargetSizeKB'] = '200'
-    if 'FileSuffix' not in config['DEFAULT']:
-        config['DEFAULT']['FileSuffix'] = '_resize'
-    if 'RotateAngle' not in config['DEFAULT']:
-        config['DEFAULT']['RotateAngle'] = '90'
-    with open(config_file, 'w') as configfile:
-        config.write(configfile)
-else:
-    # Create default configuration
-    config['DEFAULT'] = {
-        'MaxFrameSize': '900',
-        'TargetSizeKB': '200',
-        'FileSuffix': '_resize',
-        'RotateAngle': '90'
-    }
-    with open(config_file, 'w') as configfile:
-        config.write(configfile)
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
 
-def resize_image(img, target_size_kb, exif_bytes):
-    quality = 95
+#: Directory that contains this script (used to resolve config path etc.)
+SCRIPT_DIR: str = os.path.dirname(os.path.abspath(__file__))
+
+#: Path to the configuration file (always next to the script).
+CONFIG_FILE: str = os.path.join(SCRIPT_DIR, "pic_resizer.ini")
+
+#: Default configuration values (single source of truth).
+DEFAULT_CONFIG: dict[str, str] = {
+    "MaxFrameSize": "900",
+    "TargetSizeKB": "200",
+    "FileSuffix": "_resize",
+    "RotateAngle": "90",
+}
+
+# JPEG quality parameters used by the iterative resize loop.
+QUALITY_INITIAL: int = 95
+QUALITY_FLOOR: int = 20
+QUALITY_STEP: int = 5
+
+# ---------------------------------------------------------------------------
+# Configuration helpers
+# ---------------------------------------------------------------------------
+
+
+def load_config() -> configparser.ConfigParser:
+    """Load (or create) the application configuration file.
+
+    Missing keys are filled in from *DEFAULT_CONFIG* and the file is only
+    rewritten when a change was actually needed.
+    """
+    config = configparser.ConfigParser()
+    changed = False
+
+    if os.path.exists(CONFIG_FILE):
+        config.read(CONFIG_FILE)
+        for key, value in DEFAULT_CONFIG.items():
+            if key not in config["DEFAULT"]:
+                config["DEFAULT"][key] = value
+                changed = True
+    else:
+        config["DEFAULT"] = dict(DEFAULT_CONFIG)
+        changed = True
+
+    if changed:
+        with open(CONFIG_FILE, "w") as fh:
+            config.write(fh)
+
+    return config
+
+
+# ---------------------------------------------------------------------------
+# Image processing helpers
+# ---------------------------------------------------------------------------
+
+
+def resize_image(
+    img: Image.Image, target_size_kb: float, exif_bytes: Optional[bytes]
+) -> bytes:
+    """Iteratively reduce JPEG quality until the image is within *target_size_kb*.
+
+    Starts at ``QUALITY_INITIAL`` and decreases in steps of ``QUALITY_STEP``
+    until the file size is at or below *target_size_kb* or the quality floor
+    (``QUALITY_FLOOR``) is reached.
+
+    Returns the raw JPEG bytes.
+    """
+    quality = QUALITY_INITIAL
     output = io.BytesIO()
     while True:
         if exif_bytes:
-            img.save(output, format='JPEG', quality=quality, exif=exif_bytes)
+            img.save(output, format="JPEG", quality=quality, exif=exif_bytes)
         else:
-            img.save(output, format='JPEG', quality=quality)
+            img.save(output, format="JPEG", quality=quality)
         size_kb = len(output.getvalue()) / 1024
-        if size_kb <= target_size_kb or quality <= 20:
+        if size_kb <= target_size_kb or quality <= QUALITY_FLOOR:
             break
-        quality -= 5
+        quality -= QUALITY_STEP
         output.seek(0)
         output.truncate()
     return output.getvalue()
 
-def fix_orientation(image):
+
+def fix_orientation(image: Image.Image) -> Image.Image:
+    """Apply the EXIF orientation tag and return the corrected image.
+
+    All eight EXIF orientation values are handled.  If the image has no
+    EXIF data or no orientation tag the image is returned unchanged.
+    """
     try:
         exif = image._getexif()
         if exif:
-            orientation_key = next((k for k, v in ExifTags.TAGS.items() if v == 'Orientation'), None)
+            orientation_key = next(
+                (k for k, v in ExifTags.TAGS.items() if v == "Orientation"), None
+            )
             if orientation_key and orientation_key in exif:
                 orientation = exif[orientation_key]
                 if orientation == 2:
@@ -65,32 +124,65 @@ def fix_orientation(image):
                 elif orientation == 4:
                     image = image.transpose(Image.FLIP_TOP_BOTTOM)
                 elif orientation == 5:
-                    image = image.transpose(Image.FLIP_LEFT_RIGHT).transpose(Image.ROTATE_90)
+                    image = image.transpose(Image.FLIP_LEFT_RIGHT).transpose(
+                        Image.ROTATE_90
+                    )
                 elif orientation == 6:
                     image = image.transpose(Image.ROTATE_270)
                 elif orientation == 7:
-                    image = image.transpose(Image.FLIP_LEFT_RIGHT).transpose(Image.ROTATE_270)
+                    image = image.transpose(Image.FLIP_LEFT_RIGHT).transpose(
+                        Image.ROTATE_270
+                    )
                 elif orientation == 8:
                     image = image.transpose(Image.ROTATE_90)
     except (AttributeError, KeyError, IndexError):
-        # No EXIF orientation info, or it couldn't be applied
         pass
     return image
 
-def rotate_image(image, angle):
+
+def rotate_image(image: Image.Image, angle: int) -> Image.Image:
+    """Rotate *image* by *angle* degrees (90, 180, or 270).
+
+    Returns the original image unchanged for unrecognised angles.
+    """
     if angle == 90:
         return image.transpose(Image.ROTATE_90)
     elif angle == 180:
         return image.transpose(Image.ROTATE_180)
     elif angle == 270:
         return image.transpose(Image.ROTATE_270)
-    else:
-        return image
+    return image
 
-def resize_images():
+
+def _load_exif_safe(img: Image.Image) -> Optional[bytes]:
+    """Load EXIF data from *img*, returning ``None`` if unavailable.
+
+    Handles images that have no EXIF data (or corrupt EXIF) without
+    raising an exception.
+    """
+    raw_exif = img.info.get("exif")
+    if not raw_exif:
+        return None
+    try:
+        exif_dict = piexif.load(raw_exif)
+        # Remove orientation tag (we already applied it via fix_orientation)
+        if "0th" in exif_dict and piexif.ImageIFD.Orientation in exif_dict["0th"]:
+            del exif_dict["0th"][piexif.ImageIFD.Orientation]
+        return piexif.dump(exif_dict)
+    except Exception:
+        return None
+
+
+# ---------------------------------------------------------------------------
+# GUI actions
+# ---------------------------------------------------------------------------
+
+
+def resize_images() -> None:
+    """Open file/directory pickers and batch-resize the selected images."""
     input_files = filedialog.askopenfilenames(
         title="Select Images to Resize",
-        filetypes=[("JPEG files", "*.jpg *.jpeg")]
+        filetypes=[("JPEG files", "*.jpg *.jpeg")],
     )
     if not input_files:
         return
@@ -109,10 +201,10 @@ def resize_images():
     suffix = suffix_entry.get() or "_resize"
 
     # Save current values to config
-    config['DEFAULT']['MaxFrameSize'] = str(max_frame_size)
-    config['DEFAULT']['TargetSizeKB'] = str(target_size_kb)
-    config['DEFAULT']['FileSuffix'] = suffix
-    with open(config_file, 'w') as configfile:
+    config["DEFAULT"]["MaxFrameSize"] = str(max_frame_size)
+    config["DEFAULT"]["TargetSizeKB"] = str(target_size_kb)
+    config["DEFAULT"]["FileSuffix"] = suffix
+    with open(CONFIG_FILE, "w") as configfile:
         config.write(configfile)
 
     # Create and show progress window
@@ -121,27 +213,19 @@ def resize_images():
     progress_window.geometry("300x100")
     progress_label = ttk.Label(progress_window, text="Processing images...")
     progress_label.pack(pady=10)
-    progress_bar = ttk.Progressbar(progress_window, length=200, mode='determinate')
+    progress_bar = ttk.Progressbar(progress_window, length=200, mode="determinate")
     progress_bar.pack(pady=10)
 
-    def process_images():
+    def process_images() -> None:
         count = 0
         total = len(input_files)
-        failures = []  # Track failed images with error details
+        failures: list[str] = []
         for img_path in input_files:
             try:
                 with Image.open(img_path) as img:
-                    # Fix orientation
                     img = fix_orientation(img)
 
-                    # Preserve EXIF data
-                    exif_dict = piexif.load(img.info.get("exif", b""))
-
-                    # Remove orientation tag from EXIF
-                    if piexif.ImageIFD.Orientation in exif_dict["0th"]:
-                        del exif_dict["0th"][piexif.ImageIFD.Orientation]
-
-                    exif_bytes = piexif.dump(exif_dict)
+                    exif_bytes = _load_exif_safe(img)
 
                     # Resize
                     if img.width > img.height:
@@ -153,47 +237,51 @@ def resize_images():
 
                     resized_img = img.resize((new_width, new_height), Image.LANCZOS)
 
-                    # Adjust quality to meet target size
                     img_data = resize_image(resized_img, target_size_kb, exif_bytes)
 
-                    # Save the image
                     filename = os.path.basename(img_path)
                     name, ext = os.path.splitext(filename)
                     new_filename = f"{name}{suffix}{ext}"
                     output_path = os.path.join(output_dir, new_filename)
 
-                    with open(output_path, 'wb') as f:
+                    with open(output_path, "wb") as f:
                         f.write(img_data)
                 count += 1
-                c, t = count, total  # capture for closure
-                progress_window.after(0, lambda c=c, t=t: (
-                    progress_bar.__setitem__('value', (c / t) * 100),
-                    progress_label.__setitem__('text', f"Processing image {c} of {t}")
-                ))
+                c, t = count, total
+                progress_window.after(
+                    0,
+                    lambda c=c, t=t: (
+                        progress_bar.__setitem__("value", (c / t) * 100),
+                        progress_label.config(text=f"Processing image {c} of {t}"),
+                    ),
+                )
             except Exception as e:
-                failures.append(f"{img_path}: {str(e)}")
+                failures.append(f"{img_path}: {e}")
 
-        def finish():
+        def finish() -> None:
             progress_window.destroy()
             if failures:
                 failure_report = "\n".join(failures)
                 messagebox.showwarning(
                     "Processing Complete",
                     f"Processed {count}/{total} images successfully.\n\n"
-                    f"The following images failed:\n{failure_report}"
+                    f"The following images failed:\n{failure_report}",
                 )
             else:
-                messagebox.showinfo("Complete", f"Successfully resized {count}/{total} images!")
+                messagebox.showinfo(
+                    "Complete", f"Successfully resized {count}/{total} images!"
+                )
 
         progress_window.after(0, finish)
 
-    # Run image processing in a separate thread
     threading.Thread(target=process_images, daemon=True).start()
 
-def rotate_images():
+
+def rotate_images() -> None:
+    """Open file/directory pickers and batch-rotate the selected images."""
     input_files = filedialog.askopenfilenames(
         title="Select Images to Rotate",
-        filetypes=[("JPEG files", "*.jpg *.jpeg")]
+        filetypes=[("JPEG files", "*.jpg *.jpeg")],
     )
     if not input_files:
         return
@@ -211,8 +299,8 @@ def rotate_images():
     suffix = suffix_entry.get() or "_rotate"
 
     # Save current rotation angle to config
-    config['DEFAULT']['RotateAngle'] = str(rotate_angle)
-    with open(config_file, 'w') as configfile:
+    config["DEFAULT"]["RotateAngle"] = str(rotate_angle)
+    with open(CONFIG_FILE, "w") as configfile:
         config.write(configfile)
 
     # Create and show progress window
@@ -221,98 +309,147 @@ def rotate_images():
     progress_window.geometry("300x100")
     progress_label = ttk.Label(progress_window, text="Rotating images...")
     progress_label.pack(pady=10)
-    progress_bar = ttk.Progressbar(progress_window, length=200, mode='determinate')
+    progress_bar = ttk.Progressbar(progress_window, length=200, mode="determinate")
     progress_bar.pack(pady=10)
 
-    def process_images():
+    def process_images() -> None:
         count = 0
         total = len(input_files)
+        failures: list[str] = []
         for img_path in input_files:
             try:
                 with Image.open(img_path) as img:
-                    # Fix orientation
                     img = fix_orientation(img)
 
-                    # Rotate the image
+                    # Preserve EXIF data through rotation
+                    exif_bytes = _load_exif_safe(img)
+
                     rotated_img = rotate_image(img, rotate_angle)
 
-                    # Save the image
                     filename = os.path.basename(img_path)
                     name, ext = os.path.splitext(filename)
                     new_filename = f"{name}{suffix}{ext}"
                     output_path = os.path.join(output_dir, new_filename)
-                    rotated_img.save(output_path)
-                count += 1
-                c, t = count, total  # capture for closure
-                progress_window.after(0, lambda c=c, t=t: (
-                    progress_bar.__setitem__('value', (c / t) * 100),
-                    progress_label.__setitem__('text', f"Rotating image {c} of {t}")
-                ))
-            except Exception as e:
-                print(f"Error processing {img_path}: {str(e)}")
 
-        def finish():
+                    if exif_bytes:
+                        rotated_img.save(output_path, format="JPEG", exif=exif_bytes)
+                    else:
+                        rotated_img.save(output_path, format="JPEG")
+                count += 1
+                c, t = count, total
+                progress_window.after(
+                    0,
+                    lambda c=c, t=t: (
+                        progress_bar.__setitem__("value", (c / t) * 100),
+                        progress_label.config(text=f"Rotating image {c} of {t}"),
+                    ),
+                )
+            except Exception as e:
+                failures.append(f"{img_path}: {e}")
+
+        def finish() -> None:
             progress_window.destroy()
-            messagebox.showinfo("Complete", f"Rotated {count} images successfully!")
+            if failures:
+                failure_report = "\n".join(failures)
+                messagebox.showwarning(
+                    "Rotation Complete",
+                    f"Rotated {count}/{total} images successfully.\n\n"
+                    f"The following images failed:\n{failure_report}",
+                )
+            else:
+                messagebox.showinfo(
+                    "Complete", f"Rotated {count}/{total} images successfully!"
+                )
 
         progress_window.after(0, finish)
 
-    # Run image rotation in a separate thread
     threading.Thread(target=process_images, daemon=True).start()
 
-# Create main window
-root = tk.Tk()
-root.title("Batch Image Resizer and Rotator")
 
-# Configure style
-style = ttk.Style()
-style.theme_use('clam')
-style.configure('TButton', font=('Arial', 12, 'bold'), padding=10)
+# ---------------------------------------------------------------------------
+# GUI setup
+# ---------------------------------------------------------------------------
 
-# Create and pack widgets
-frame = ttk.Frame(root, padding="10")
-frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-# Resize section
-ttk.Label(frame, text="Max Frame Size:").grid(row=0, column=0, sticky=tk.W, pady=5)
-max_frame_size_entry = ttk.Entry(frame, width=20)
-max_frame_size_entry.insert(0, config['DEFAULT']['MaxFrameSize'])
-max_frame_size_entry.grid(row=0, column=1, pady=5)
+def main() -> None:
+    """Build the GUI and start the tkinter event loop."""
+    global root, config, max_frame_size_entry, target_size_entry, suffix_entry
+    global rotate_angle_var
 
-ttk.Label(frame, text="Target Size (KB):").grid(row=1, column=0, sticky=tk.W, pady=5)
-target_size_entry = ttk.Entry(frame, width=20)
-target_size_entry.insert(0, config['DEFAULT']['TargetSizeKB'])
-target_size_entry.grid(row=1, column=1, pady=5)
+    config = load_config()
 
-ttk.Label(frame, text="File Suffix:").grid(row=2, column=0, sticky=tk.W, pady=5)
-suffix_entry = ttk.Entry(frame, width=20)
-suffix_entry.insert(0, config['DEFAULT']['FileSuffix'])
-suffix_entry.grid(row=2, column=1, pady=5)
+    root = tk.Tk()
+    root.title("Batch Image Resizer and Rotator")
 
-resize_button = ttk.Button(frame, text="Select and Resize Images", command=resize_images, style='TButton')
-resize_button.grid(row=3, column=0, columnspan=2, pady=20)
+    # Configure style
+    style = ttk.Style()
+    style.theme_use("clam")
+    style.configure("TButton", font=("Arial", 12, "bold"), padding=10)
 
-# Rotate section
-rotate_frame = ttk.Frame(root, padding="10")
-rotate_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+    # Create and pack widgets
+    frame = ttk.Frame(root, padding="10")
+    frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-ttk.Label(rotate_frame, text="Rotate Angle:").grid(row=0, column=0, sticky=tk.W, pady=5)
-rotate_angle_var = tk.StringVar(value=config['DEFAULT']['RotateAngle'])
-rotate_90_radio = ttk.Radiobutton(rotate_frame, text="90°", variable=rotate_angle_var, value="90")
-rotate_90_radio.grid(row=0, column=1, pady=5)
-rotate_180_radio = ttk.Radiobutton(rotate_frame, text="180°", variable=rotate_angle_var, value="180")
-rotate_180_radio.grid(row=0, column=2, pady=5)
-rotate_270_radio = ttk.Radiobutton(rotate_frame, text="270°", variable=rotate_angle_var, value="270")
-rotate_270_radio.grid(row=0, column=3, pady=5)
+    # Resize section
+    ttk.Label(frame, text="Max Frame Size:").grid(row=0, column=0, sticky=tk.W, pady=5)
+    max_frame_size_entry = ttk.Entry(frame, width=20)
+    max_frame_size_entry.insert(0, config["DEFAULT"]["MaxFrameSize"])
+    max_frame_size_entry.grid(row=0, column=1, pady=5)
 
-rotate_button = ttk.Button(rotate_frame, text="Select and Rotate Images", command=rotate_images, style='TButton')
-rotate_button.grid(row=1, column=0, columnspan=4, pady=20)
+    ttk.Label(frame, text="Target Size (KB):").grid(
+        row=1, column=0, sticky=tk.W, pady=5
+    )
+    target_size_entry = ttk.Entry(frame, width=20)
+    target_size_entry.insert(0, config["DEFAULT"]["TargetSizeKB"])
+    target_size_entry.grid(row=1, column=1, pady=5)
 
-# Configure grid expansion
-for child in frame.winfo_children(): 
-    child.grid_configure(padx=5)
-for child in rotate_frame.winfo_children():
-    child.grid_configure(padx=5)
+    ttk.Label(frame, text="File Suffix:").grid(row=2, column=0, sticky=tk.W, pady=5)
+    suffix_entry = ttk.Entry(frame, width=20)
+    suffix_entry.insert(0, config["DEFAULT"]["FileSuffix"])
+    suffix_entry.grid(row=2, column=1, pady=5)
 
-# Start the GUI event loop
-root.mainloop()
+    resize_button = ttk.Button(
+        frame,
+        text="Select and Resize Images",
+        command=resize_images,
+        style="TButton",
+    )
+    resize_button.grid(row=3, column=0, columnspan=2, pady=20)
+
+    # Rotate section
+    rotate_frame = ttk.Frame(root, padding="10")
+    rotate_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+    ttk.Label(rotate_frame, text="Rotate Angle:").grid(
+        row=0, column=0, sticky=tk.W, pady=5
+    )
+    rotate_angle_var = tk.StringVar(value=config["DEFAULT"]["RotateAngle"])
+    ttk.Radiobutton(
+        rotate_frame, text="90\u00b0", variable=rotate_angle_var, value="90"
+    ).grid(row=0, column=1, pady=5)
+    ttk.Radiobutton(
+        rotate_frame, text="180\u00b0", variable=rotate_angle_var, value="180"
+    ).grid(row=0, column=2, pady=5)
+    ttk.Radiobutton(
+        rotate_frame, text="270\u00b0", variable=rotate_angle_var, value="270"
+    ).grid(row=0, column=3, pady=5)
+
+    rotate_button = ttk.Button(
+        rotate_frame,
+        text="Select and Rotate Images",
+        command=rotate_images,
+        style="TButton",
+    )
+    rotate_button.grid(row=1, column=0, columnspan=4, pady=20)
+
+    # Configure grid expansion
+    for child in frame.winfo_children():
+        child.grid_configure(padx=5)
+    for child in rotate_frame.winfo_children():
+        child.grid_configure(padx=5)
+
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()

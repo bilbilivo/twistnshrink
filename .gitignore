@@ -1,18 +1,54 @@
-*.pyc
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.venv/
+
+# Build / distribution artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# PyInstaller
+*.manifest
+*.spec.bak
+
+# IDE / editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Type checking / linting caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Environment files
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Application runtime files
+log/
+input/
+output/
+
+# Generated files
+pic_resizer.png
+pic_resizer.desktop
+pic_resizer.zip
+
+# Development files
 *DEV.py
 *DEV.html
 *DEV.json
 *DEV.zip
-log/*
-input/*
-output/*
-venv/*
-build/*
-pic_resizer.png
-pic_resizer.desktop
-pic_resizer.zip
-!input/*_inputList.txt
-!input/required_files_(overrides_above)*TEST*.xlsx
-!input/*template*.xlsx
-input/unwanted_files_(overrides_the_override_above)*TEST*xlsx
-*test*.py
