@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 
 ## [Unreleased]
 
+## [2026.6] - 2026-02-18
+
+### Changed
+- Dependency management is now handled solely via `pyproject.toml` (PEP 621). `requirements.txt` has been removed and launcher/install documentation and scripts updated. The launcher will upgrade pip to 23.1+ if needed and use `pip install .` for installs. This modernizes and simplifies all future maintenance.
+
 ## [2026.5] - 2026-02-18
 
 ### Fixed

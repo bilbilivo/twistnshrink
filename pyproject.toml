@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pic-resizer"
-version = "2026.5"
+version = "2026.6"
 description = "Batch image resizer and rotator with a tkinter GUI"
 readme = "README.md"
 license = {text = "MIT"}
