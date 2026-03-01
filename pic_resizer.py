@@ -411,7 +411,7 @@ def rotate_images() -> None:
 # ---------------------------------------------------------------------------
 
 PAYPAL_URL = "https://paypal.me/bilbilivo"
-APP_VERSION = "2026.6"
+APP_VERSION = "2026.7"
 
 
 def open_donate() -> None:
@@ -520,7 +520,7 @@ def main() -> None:
     ).grid(row=4, column=1, sticky=tk.W, pady=5)
     ttk.Radiobutton(
         frame, text="180\u00b0", variable=rotate_angle_var, value="180"
-    ).grid(row=4, column=1, sticky=tk.N, pady=5, padx=(75,0))
+    ).grid(row=4, column=1, sticky=tk.N, pady=5, padx=(75, 0))
     ttk.Radiobutton(
         frame, text="270\u00b0", variable=rotate_angle_var, value="270"
     ).grid(row=4, column=1, sticky=tk.E, pady=5)
