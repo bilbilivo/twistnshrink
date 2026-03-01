@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 
 ## [Unreleased]
 
+## [2026.7] - 2026-02-28
+
+### Added
+- Help menu with **Donate via PayPal** and **About** dialog (clickable PayPal link).
+- `.github/FUNDING.yml` — GitHub Sponsor button linking to PayPal.
+- PayPal donate badge in README.
+- Application icon replaced with monochrome Material Icons "image" icon (Apache 2.0).
+
+### Fixed
+- Progress window close button is now disabled during processing, preventing a crash (`TclError`) if the user dismisses it mid-batch.
+- Numeric inputs (Max Frame Size, Target Size KB) are now validated to be positive before processing begins.
+- Output files that already exist are now skipped with a warning instead of being silently overwritten.
+- Config file writes are now wrapped in `try/except OSError` so a read-only filesystem no longer crashes the app.
+- `FileSuffix` is sanitised to strip path-separator characters, preventing directory traversal.
+- `fix_orientation` now catches `Exception` broadly (previously `AttributeError, KeyError, IndexError`) to handle all malformed EXIF cases.
+- Replaced private `image._getexif()` Pillow API with the public `image.getexif()` (available since Pillow 6.0).
+- Progress bar updates now use `.configure()` instead of `.__setitem__()` dunder calls; named functions replace tuple-returning lambdas.
+- Release workflow now uses `pyinstaller pic_resizer.spec` so released `.exe` files include the application icon.
+- CI `paths-ignore` cleaned up: removed redundant `CHANGELOG.md` entry (already matched by `**/*.md`) and nonexistent `docs/**` path.
+- `launch.sh` icon conversion now passes paths via environment variables instead of embedding shell variables in a Python string literal.
+- Removed stale `pic_resizer.ini` and `.opencode/plans/ci-cd-and-testing.md` from version control.
+- Unused `sample_jpeg_bytes` test fixture removed from `tests/conftest.py`.
+- Copyright year updated to 2025-2026 in LICENSE and README.
+
 ## [2026.6] - 2026-02-18
 
 ### Changed

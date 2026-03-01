@@ -61,7 +61,7 @@ jobs:
         run: pip install ".[build]"
 
       - name: Build executable
-        run: pyinstaller --onefile --noconsole pic_resizer.py
+        run: pyinstaller pic_resizer.spec
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

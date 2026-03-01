@@ -29,10 +29,4 @@ def sample_image_with_exif():
     return Image.open(buf)
 
 
-@pytest.fixture
-def sample_jpeg_bytes():
-    """Return raw JPEG bytes for a small test image (no EXIF)."""
-    img = Image.new("RGB", (50, 50), color="green")
-    buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=95)
-    return buf.getvalue()
+

@@ -10,6 +10,7 @@ import configparser
 import io
 import os
 import threading
+import webbrowser
 from typing import Optional
 
 import piexif
@@ -69,8 +70,11 @@ def load_config() -> configparser.ConfigParser:
         changed = True
 
     if changed:
-        with open(CONFIG_FILE, "w") as fh:
-            config.write(fh)
+        try:
+            with open(CONFIG_FILE, "w") as fh:
+                config.write(fh)
+        except OSError:
+            pass  # Non-fatal: config directory may be read-only
 
     return config
 
@@ -114,7 +118,7 @@ def fix_orientation(image: Image.Image) -> Image.Image:
     EXIF data or no orientation tag the image is returned unchanged.
     """
     try:
-        exif = image._getexif()
+        exif = image.getexif()
         if exif:
             orientation_key = next(
                 (k for k, v in ExifTags.TAGS.items() if v == "Orientation"), None
@@ -139,7 +143,7 @@ def fix_orientation(image: Image.Image) -> Image.Image:
                     )
                 elif orientation == 8:
                     image = image.transpose(Image.ROTATE_90)
-    except (AttributeError, KeyError, IndexError):
+    except Exception:
         pass
     return image
 
@@ -202,19 +206,32 @@ def resize_images() -> None:
         messagebox.showerror("Error", "Please enter valid numeric values.")
         return
 
-    suffix = suffix_entry.get() or "_resize"
+    if max_frame_size < 1 or target_size_kb <= 0:
+        messagebox.showerror(
+            "Error", "Max Frame Size must be >= 1 and Target Size must be > 0."
+        )
+        return
+
+    # Strip path separators from suffix to prevent directory traversal
+    raw_suffix = suffix_entry.get() or "_resize"
+    suffix = raw_suffix.replace("/", "").replace("\\", "")
 
     # Save current values to config
     config["DEFAULT"]["MaxFrameSize"] = str(max_frame_size)
     config["DEFAULT"]["TargetSizeKB"] = str(target_size_kb)
     config["DEFAULT"]["FileSuffix"] = suffix
-    with open(CONFIG_FILE, "w") as configfile:
-        config.write(configfile)
+    try:
+        with open(CONFIG_FILE, "w") as configfile:
+            config.write(configfile)
+    except OSError:
+        pass  # Non-fatal: settings will not persist this session
 
     # Create and show progress window
     progress_window = tk.Toplevel(root)
     progress_window.title("Processing Images")
     progress_window.geometry("300x100")
+    # Disable the close button so the user cannot dismiss it mid-processing
+    progress_window.protocol("WM_DELETE_WINDOW", lambda: None)
     progress_label = ttk.Label(progress_window, text="Processing images...")
     progress_label.pack(pady=10)
     progress_bar = ttk.Progressbar(progress_window, length=200, mode="determinate")
@@ -224,8 +241,18 @@ def resize_images() -> None:
         count = 0
         total = len(input_files)
         failures: list[str] = []
+        skipped: list[str] = []
         for img_path in input_files:
             try:
+                filename = os.path.basename(img_path)
+                name, ext = os.path.splitext(filename)
+                new_filename = f"{name}{suffix}{ext}"
+                output_path = os.path.join(output_dir, new_filename)
+
+                if os.path.exists(output_path):
+                    skipped.append(new_filename)
+                    continue
+
                 with Image.open(img_path) as img:
                     img = fix_orientation(img)
 
@@ -240,41 +267,37 @@ def resize_images() -> None:
                         new_width = int(new_height * img.width / img.height)
 
                     resized_img = img.resize((new_width, new_height), Image.LANCZOS)
-
                     img_data = resize_image(resized_img, target_size_kb, exif_bytes)
 
-                    filename = os.path.basename(img_path)
-                    name, ext = os.path.splitext(filename)
-                    new_filename = f"{name}{suffix}{ext}"
-                    output_path = os.path.join(output_dir, new_filename)
-
-                    with open(output_path, "wb") as f:
-                        f.write(img_data)
+                with open(output_path, "wb") as f:
+                    f.write(img_data)
                 count += 1
                 c, t = count, total
-                progress_window.after(
-                    0,
-                    lambda c=c, t=t: (
-                        progress_bar.__setitem__("value", (c / t) * 100),
-                        progress_label.config(text=f"Processing image {c} of {t}"),
-                    ),
-                )
+
+                def _update_progress(c: int = c, t: int = t) -> None:
+                    progress_bar.configure(value=(c / t) * 100)
+                    progress_label.configure(text=f"Processing image {c} of {t}")
+
+                progress_window.after(0, _update_progress)
             except Exception as e:
                 failures.append(f"{img_path}: {e}")
 
         def finish() -> None:
             progress_window.destroy()
+            parts = [f"Processed {count}/{total} images successfully."]
+            if skipped:
+                parts.append(
+                    f"\nSkipped {len(skipped)} already-existing file(s):\n"
+                    + "\n".join(skipped)
+                )
             if failures:
-                failure_report = "\n".join(failures)
-                messagebox.showwarning(
-                    "Processing Complete",
-                    f"Processed {count}/{total} images successfully.\n\n"
-                    f"The following images failed:\n{failure_report}",
+                parts.append(
+                    f"\nFailed {len(failures)} file(s):\n" + "\n".join(failures)
                 )
+            if skipped or failures:
+                messagebox.showwarning("Processing Complete", "".join(parts))
             else:
-                messagebox.showinfo(
-                    "Complete", f"Successfully resized {count}/{total} images!"
-                )
+                messagebox.showinfo("Complete", parts[0])
 
         progress_window.after(0, finish)
 
@@ -300,17 +323,24 @@ def rotate_images() -> None:
         messagebox.showerror("Error", "Please select a valid rotation angle.")
         return
 
-    suffix = suffix_entry.get() or "_rotate"
+    # Strip path separators from suffix to prevent directory traversal
+    raw_suffix = suffix_entry.get() or "_rotate"
+    suffix = raw_suffix.replace("/", "").replace("\\", "")
 
     # Save current rotation angle to config
     config["DEFAULT"]["RotateAngle"] = str(rotate_angle)
-    with open(CONFIG_FILE, "w") as configfile:
-        config.write(configfile)
+    try:
+        with open(CONFIG_FILE, "w") as configfile:
+            config.write(configfile)
+    except OSError:
+        pass  # Non-fatal: settings will not persist this session
 
     # Create and show progress window
     progress_window = tk.Toplevel(root)
     progress_window.title("Rotating Images")
     progress_window.geometry("300x100")
+    # Disable the close button so the user cannot dismiss it mid-processing
+    progress_window.protocol("WM_DELETE_WINDOW", lambda: None)
     progress_label = ttk.Label(progress_window, text="Rotating images...")
     progress_label.pack(pady=10)
     progress_bar = ttk.Progressbar(progress_window, length=200, mode="determinate")
@@ -320,54 +350,102 @@ def rotate_images() -> None:
         count = 0
         total = len(input_files)
         failures: list[str] = []
+        skipped: list[str] = []
         for img_path in input_files:
             try:
+                filename = os.path.basename(img_path)
+                name, ext = os.path.splitext(filename)
+                new_filename = f"{name}{suffix}{ext}"
+                output_path = os.path.join(output_dir, new_filename)
+
+                if os.path.exists(output_path):
+                    skipped.append(new_filename)
+                    continue
+
                 with Image.open(img_path) as img:
                     img = fix_orientation(img)
 
                     # Preserve EXIF data through rotation
                     exif_bytes = _load_exif_safe(img)
-
                     rotated_img = rotate_image(img, rotate_angle)
 
-                    filename = os.path.basename(img_path)
-                    name, ext = os.path.splitext(filename)
-                    new_filename = f"{name}{suffix}{ext}"
-                    output_path = os.path.join(output_dir, new_filename)
-
-                    if exif_bytes:
-                        rotated_img.save(output_path, format="JPEG", exif=exif_bytes)
-                    else:
-                        rotated_img.save(output_path, format="JPEG")
+                if exif_bytes:
+                    rotated_img.save(output_path, format="JPEG", exif=exif_bytes)
+                else:
+                    rotated_img.save(output_path, format="JPEG")
                 count += 1
                 c, t = count, total
-                progress_window.after(
-                    0,
-                    lambda c=c, t=t: (
-                        progress_bar.__setitem__("value", (c / t) * 100),
-                        progress_label.config(text=f"Rotating image {c} of {t}"),
-                    ),
-                )
+
+                def _update_progress(c: int = c, t: int = t) -> None:
+                    progress_bar.configure(value=(c / t) * 100)
+                    progress_label.configure(text=f"Rotating image {c} of {t}")
+
+                progress_window.after(0, _update_progress)
             except Exception as e:
                 failures.append(f"{img_path}: {e}")
 
         def finish() -> None:
             progress_window.destroy()
+            parts = [f"Rotated {count}/{total} images successfully."]
+            if skipped:
+                parts.append(
+                    f"\nSkipped {len(skipped)} already-existing file(s):\n"
+                    + "\n".join(skipped)
+                )
             if failures:
-                failure_report = "\n".join(failures)
-                messagebox.showwarning(
-                    "Rotation Complete",
-                    f"Rotated {count}/{total} images successfully.\n\n"
-                    f"The following images failed:\n{failure_report}",
+                parts.append(
+                    f"\nFailed {len(failures)} file(s):\n" + "\n".join(failures)
                 )
+            if skipped or failures:
+                messagebox.showwarning("Rotation Complete", "".join(parts))
             else:
-                messagebox.showinfo(
-                    "Complete", f"Rotated {count}/{total} images successfully!"
-                )
+                messagebox.showinfo("Complete", parts[0])
 
         progress_window.after(0, finish)
 
     threading.Thread(target=process_images, daemon=True).start()
+
+
+# ---------------------------------------------------------------------------
+# Menu actions
+# ---------------------------------------------------------------------------
+
+PAYPAL_URL = "https://paypal.me/bilbilivo"
+APP_VERSION = "2026.6"
+
+
+def open_donate() -> None:
+    """Open the PayPal donation page in the default web browser."""
+    webbrowser.open(PAYPAL_URL)
+
+
+def show_about() -> None:
+    """Show the About dialog with a clickable PayPal link."""
+    win = tk.Toplevel(root)
+    win.title("About Batch Pic Resizer")
+    win.resizable(False, False)
+
+    frame = ttk.Frame(win, padding=20)
+    frame.pack(fill=tk.BOTH, expand=True)
+
+    ttk.Label(frame, text=f"Batch Pic Resizer  v{APP_VERSION}",
+              font=("Arial", 13, "bold")).pack(anchor=tk.W)
+    ttk.Label(frame, text="Batch resize and rotate JPEG images.\n"
+              "EXIF metadata is preserved.").pack(anchor=tk.W, pady=(8, 0))
+    ttk.Label(frame, text="Author: Stephane Belliveau\n"
+              "License: MIT").pack(anchor=tk.W, pady=(8, 0))
+
+    ttk.Separator(frame, orient="horizontal").pack(fill=tk.X, pady=12)
+
+    ttk.Label(frame, text="If you find this tool useful, consider buying me a coffee!",
+              wraplength=300).pack(anchor=tk.W)
+
+    link = tk.Label(frame, text=PAYPAL_URL, fg="blue", cursor="hand2",
+                    font=("Arial", 10, "underline"))
+    link.pack(anchor=tk.W, pady=(4, 0))
+    link.bind("<Button-1>", lambda _e: webbrowser.open(PAYPAL_URL))
+
+    ttk.Button(frame, text="Close", command=win.destroy).pack(pady=(16, 0))
 
 
 # ---------------------------------------------------------------------------
@@ -389,6 +467,15 @@ def main() -> None:
     style = ttk.Style()
     style.theme_use("clam")
     style.configure("TButton", font=("Arial", 12, "bold"), padding=10)
+
+    # Menu bar
+    menubar = tk.Menu(root)
+    help_menu = tk.Menu(menubar, tearoff=0)
+    help_menu.add_command(label="Donate via PayPal", command=open_donate)
+    help_menu.add_separator()
+    help_menu.add_command(label="About", command=show_about)
+    menubar.add_cascade(label="Help", menu=help_menu)
+    root.config(menu=menubar)
 
     # Create and pack widgets
     frame = ttk.Frame(root, padding="10")
@@ -451,7 +538,6 @@ def main() -> None:
         child.grid_configure(padx=5)
 
     root.mainloop()
-
 
 
 if __name__ == "__main__":

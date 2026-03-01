@@ -1,0 +1,5 @@
+# GitHub Sponsors / funding configuration.
+# GitHub reads this file and displays a "Sponsor" button on the repository page.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+custom: ["https://paypal.me/bilbilivo"]

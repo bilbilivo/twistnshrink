@@ -37,9 +37,12 @@ install() {
     ICON_PNG="$SCRIPT_DIR/pic_resizer.png"
     if [ ! -f "$ICON_PNG" ] && [ -f "$SCRIPT_DIR/pic_resizer.ico" ]; then
         echo "Converting icon to PNG..."
+        ICO_PATH="$SCRIPT_DIR/pic_resizer.ico" \
+        PNG_PATH="$ICON_PNG" \
         "$VENV_DIR/bin/python" -c "
+import os
 from PIL import Image
-Image.open('$SCRIPT_DIR/pic_resizer.ico').save('$ICON_PNG', 'PNG')
+Image.open(os.environ['ICO_PATH']).save(os.environ['PNG_PATH'], 'PNG')
 "
     fi
 

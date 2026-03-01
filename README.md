@@ -1,6 +1,7 @@
 # Pic Resizer
 
 [![CI](https://github.com/bilbilivo/pic_resizer/actions/workflows/ci.yml/badge.svg)](https://github.com/bilbilivo/pic_resizer/actions/workflows/ci.yml)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://paypal.me/bilbilivo)
 
 Batch image resizer and rotator with a tkinter GUI. Resizes JPEGs to a target file size and max dimension, preserving EXIF data. Also supports batch rotation. Works on Linux, macOS, and Windows.
 
@@ -143,4 +144,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-[MIT](LICENSE) -- Copyright 2025 Stephane Belliveau
+[MIT](LICENSE) -- Copyright 2025-2026 Stephane Belliveau
+
+Application icon derived from [Google Material Icons](https://github.com/google/material-design-icons) (Apache 2.0).

@@ -53,3 +53,6 @@ pic_resizer.zip
 *DEV.html
 *DEV.json
 *DEV.zip
+
+# AI assistant workspace (plans are internal dev artifacts)
+.opencode/plans/
