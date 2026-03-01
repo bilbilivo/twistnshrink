@@ -34,10 +34,10 @@ setup_venv() {
 install() {
     setup_venv
 
-    ICON_PNG="$SCRIPT_DIR/pic_resizer.png"
-    if [ ! -f "$ICON_PNG" ] && [ -f "$SCRIPT_DIR/pic_resizer.ico" ]; then
+    ICON_PNG="$SCRIPT_DIR/twistnshrink.png"
+    if [ ! -f "$ICON_PNG" ] && [ -f "$SCRIPT_DIR/twistnshrink.ico" ]; then
         echo "Converting icon to PNG..."
-        ICO_PATH="$SCRIPT_DIR/pic_resizer.ico" \
+        ICO_PATH="$SCRIPT_DIR/twistnshrink.ico" \
         PNG_PATH="$ICON_PNG" \
         "$VENV_DIR/bin/python" -c "
 import os
@@ -48,18 +48,18 @@ Image.open(os.environ['ICO_PATH']).save(os.environ['PNG_PATH'], 'PNG')
 
     APPS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
     mkdir -p "$APPS_DIR"
-    DESKTOP_FILE="$APPS_DIR/pic-resizer.desktop"
+    DESKTOP_FILE="$APPS_DIR/twistnshrink.desktop"
 
     cat > "$DESKTOP_FILE" << EOF
 [Desktop Entry]
 Type=Application
-Name=Pic Resizer
+Name=TwistnShrink
 Comment=Batch image resizer and rotator
 Icon=$ICON_PNG
 Exec=$SCRIPT_DIR/launch.sh
 Terminal=false
 Categories=Graphics;
-StartupWMClass=pic_resizer
+StartupWMClass=twistnshrink
 EOF
 
     # Refresh the desktop database so the launcher picks up the new entry
@@ -68,12 +68,12 @@ EOF
     fi
 
     echo "Installed: $DESKTOP_FILE"
-    echo "Search 'Pic Resizer' in your application launcher to start."
+    echo "Search 'TwistnShrink' in your application launcher to start."
 }
 
 uninstall() {
     APPS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
-    DESKTOP_FILE="$APPS_DIR/pic-resizer.desktop"
+    DESKTOP_FILE="$APPS_DIR/twistnshrink.desktop"
 
     if [ -f "$DESKTOP_FILE" ]; then
         rm "$DESKTOP_FILE"
@@ -90,7 +90,7 @@ ACTION="${1:-launch}"
 case "$ACTION" in
     launch)
         setup_venv
-        exec "$VENV_DIR/bin/python" pic_resizer.py
+        exec "$VENV_DIR/bin/python" twistnshrink.py
         ;;
     install)
         install
@@ -100,7 +100,7 @@ case "$ACTION" in
         ;;
     *)
         echo "Usage: $0 {launch|install|uninstall}"
-        echo "       launch      Start pic_resizer (default)"
+        echo "       launch      Start TwistnShrink (default)"
         echo "       install     Add to application launcher"
         echo "       uninstall   Remove from application launcher"
         exit 2

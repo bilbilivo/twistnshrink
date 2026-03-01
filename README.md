@@ -1,6 +1,6 @@
-# Pic Resizer
+# TwistnShrink
 
-[![CI](https://github.com/bilbilivo/pic_resizer/actions/workflows/ci.yml/badge.svg)](https://github.com/bilbilivo/pic_resizer/actions/workflows/ci.yml)
+[![CI](https://github.com/bilbilivo/twistnshrink/actions/workflows/ci.yml/badge.svg)](https://github.com/bilbilivo/twistnshrink/actions/workflows/ci.yml)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://paypal.me/bilbilivo)
 
 A simple desktop app for batch resizing and rotating JPEG images. Shrinks photos to a target file size while preserving EXIF metadata. Cross-platform (Windows, Linux, macOS).
@@ -9,14 +9,14 @@ A simple desktop app for batch resizing and rotating JPEG images. Shrinks photos
 
 ### Windows (recommended)
 
-1. Download **`pic_resizer.exe`** from the [latest release](https://github.com/bilbilivo/pic_resizer/releases/latest).
+1. Download **`twistnshrink.exe`** from the [latest release](https://github.com/bilbilivo/twistnshrink/releases/latest).
 2. Double-click to run -- no installation or Python required.
 
 ### Linux / macOS
 
 ```bash
-git clone https://github.com/bilbilivo/pic_resizer.git
-cd pic_resizer
+git clone https://github.com/bilbilivo/twistnshrink.git
+cd twistnshrink
 ./launch.sh
 ```
 
@@ -46,12 +46,12 @@ Settings are remembered between sessions.
 - **Batch resize** -- Scale JPEGs so the longest side fits within a configurable frame size, then iteratively reduce JPEG quality to meet a target file size (KB).
 - **Batch rotate** -- Rotate JPEGs by 90, 180, or 270 degrees.
 - **EXIF preservation** -- Metadata is preserved. Orientation tags are applied and then stripped so images display correctly everywhere.
-- **Configurable** -- Max frame size, target file size, file suffix, and rotation angle are persisted between sessions via `pic_resizer.ini`.
+- **Configurable** -- Max frame size, target file size, file suffix, and rotation angle are persisted between sessions via `twistnshrink.ini`.
 - **Cross-platform** -- Runs on Windows (standalone `.exe`), Linux, and macOS.
 
 ## Configuration
 
-Settings are stored in `pic_resizer.ini` (created automatically on first run):
+Settings are stored in `twistnshrink.ini` (created automatically on first run):
 
 | Setting | Default | Description |
 |---|---|---|
@@ -62,13 +62,13 @@ Settings are stored in `pic_resizer.ini` (created automatically on first run):
 
 ## Linux Desktop Launcher
 
-Add Pic Resizer to your application menu (GNOME, KDE, etc.):
+Add TwistnShrink to your application menu (GNOME, KDE, etc.):
 
 ```bash
 ./launch.sh install
 ```
 
-Then search for **Pic Resizer** in your launcher. To remove:
+Then search for **TwistnShrink** in your launcher. To remove:
 
 ```bash
 ./launch.sh uninstall
@@ -82,7 +82,7 @@ If you prefer not to use the `.exe`, you can run from source:
 python -m venv venv
 venv\Scripts\activate
 pip install .
-python pic_resizer.py
+python twistnshrink.py
 ```
 
 Requires Python 3.9+.

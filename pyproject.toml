@@ -3,7 +3,7 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pic-resizer"
+name = "twistnshrink"
 version = "2026.7"
 description = "Batch image resizer and rotator with a tkinter GUI"
 readme = "README.md"

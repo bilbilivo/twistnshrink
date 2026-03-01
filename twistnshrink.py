@@ -1,4 +1,4 @@
-"""Batch Image Resizer and Rotator.
+"""TwistnShrink - Batch Image Resizer and Rotator.
 
 A tkinter GUI application for batch processing JPEG images.
 Supports resizing to a target file size / max dimension and rotating
@@ -30,7 +30,7 @@ except ImportError:  # allow importing image-processing helpers without tkinter
 SCRIPT_DIR: str = os.path.dirname(os.path.abspath(__file__))
 
 #: Path to the configuration file (always next to the script).
-CONFIG_FILE: str = os.path.join(SCRIPT_DIR, "pic_resizer.ini")
+CONFIG_FILE: str = os.path.join(SCRIPT_DIR, "twistnshrink.ini")
 
 #: Default configuration values (single source of truth).
 DEFAULT_CONFIG: dict[str, str] = {
@@ -422,13 +422,13 @@ def open_donate() -> None:
 def show_about() -> None:
     """Show the About dialog with a clickable PayPal link."""
     win = tk.Toplevel(root)
-    win.title("About Batch Pic Resizer")
+    win.title("About TwistnShrink")
     win.resizable(False, False)
 
     frame = ttk.Frame(win, padding=20)
     frame.pack(fill=tk.BOTH, expand=True)
 
-    ttk.Label(frame, text=f"Batch Pic Resizer  v{APP_VERSION}",
+    ttk.Label(frame, text=f"TwistnShrink  v{APP_VERSION}",
               font=("Arial", 13, "bold")).pack(anchor=tk.W)
     ttk.Label(frame, text="Batch resize and rotate JPEG images.\n"
               "EXIF metadata is preserved.").pack(anchor=tk.W, pady=(8, 0))
@@ -461,7 +461,7 @@ def main() -> None:
     config = load_config()
 
     root = tk.Tk()
-    root.title("Batch Pic Resizer")
+    root.title("TwistnShrink")
 
     # Configure style
     style = ttk.Style()

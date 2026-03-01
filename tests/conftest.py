@@ -1,4 +1,4 @@
-"""Shared test fixtures for pic_resizer tests."""
+"""Shared test fixtures for TwistnShrink tests."""
 
 import io
 

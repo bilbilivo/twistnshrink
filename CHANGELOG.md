@@ -23,10 +23,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 - `fix_orientation` now catches `Exception` broadly (previously `AttributeError, KeyError, IndexError`) to handle all malformed EXIF cases.
 - Replaced private `image._getexif()` Pillow API with the public `image.getexif()` (available since Pillow 6.0).
 - Progress bar updates now use `.configure()` instead of `.__setitem__()` dunder calls; named functions replace tuple-returning lambdas.
-- Release workflow now uses `pyinstaller pic_resizer.spec` so released `.exe` files include the application icon.
+- Release workflow now uses `pyinstaller twistnshrink.spec` so released `.exe` files include the application icon.
 - CI `paths-ignore` cleaned up: removed redundant `CHANGELOG.md` entry (already matched by `**/*.md`) and nonexistent `docs/**` path.
 - `launch.sh` icon conversion now passes paths via environment variables instead of embedding shell variables in a Python string literal.
-- Removed stale `pic_resizer.ini` and `.opencode/plans/ci-cd-and-testing.md` from version control.
+- Removed stale `twistnshrink.ini` and `.opencode/plans/ci-cd-and-testing.md` from version control.
 - Unused `sample_jpeg_bytes` test fixture removed from `tests/conftest.py`.
 - Copyright year updated to 2025-2026 in LICENSE and README.
 
@@ -62,7 +62,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 - GitHub Actions release workflow -- automatically builds Windows `.exe` and publishes to GitHub Releases on tag push.
 - `[build-system]` table and `[project.optional-dependencies]` in `pyproject.toml`.
 - pytest configuration in `pyproject.toml`.
-- Module docstring and function docstrings throughout `pic_resizer.py`.
+- Module docstring and function docstrings throughout `twistnshrink.py`.
 - Type hints on all functions.
 - `if __name__ == "__main__"` guard so the module can be imported without launching the GUI.
 - `CONTRIBUTING.md` with contribution guidelines.
@@ -83,5 +83,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 - JPEG quality parameters (initial, floor, step) are now named constants.
 - Dependencies in `requirements.txt` are now pinned to compatible version ranges.
 - Improved `.gitignore` with comprehensive patterns for Python, IDE, and OS files.
-- `dist/pic_resizer.exe` removed from version control; distributed via GitHub Releases instead.
-- `pic_resizer.ini` added to `.gitignore` (runtime-generated file).
+- `dist/twistnshrink.exe` removed from version control; distributed via GitHub Releases instead.
+- `twistnshrink.ini` added to `.gitignore` (runtime-generated file).

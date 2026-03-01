@@ -41,12 +41,12 @@ Thumbs.db
 log/
 input/
 output/
-pic_resizer.ini
+twistnshrink.ini
 
 # Generated files
-pic_resizer.png
-pic_resizer.desktop
-pic_resizer.zip
+twistnshrink.png
+twistnshrink.desktop
+twistnshrink.zip
 
 # Development files
 *DEV.py

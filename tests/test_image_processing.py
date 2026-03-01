@@ -1,11 +1,11 @@
-"""Unit tests for image processing functions in pic_resizer."""
+"""Unit tests for image processing functions in TwistnShrink."""
 
 import io
 
 import piexif
 from PIL import Image
 
-from pic_resizer import _load_exif_safe, fix_orientation, resize_image, rotate_image
+from twistnshrink import _load_exif_safe, fix_orientation, resize_image, rotate_image
 
 # ---------------------------------------------------------------------------
 # rotate_image tests

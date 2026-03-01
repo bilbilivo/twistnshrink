@@ -1,4 +1,4 @@
-# Contributing to Pic Resizer
+# Contributing to TwistnShrink
 
 Thanks for your interest in contributing! Here's how to get started.
 
@@ -7,8 +7,8 @@ Thanks for your interest in contributing! Here's how to get started.
 1. Fork the repository and clone your fork:
 
    ```bash
-   git clone https://github.com/<your-username>/pic_resizer.git
-   cd pic_resizer
+   git clone https://github.com/<your-username>/twistnshrink.git
+   cd twistnshrink
    ```
 
 2. Create a virtual environment and install dependencies:
@@ -30,7 +30,7 @@ Thanks for your interest in contributing! Here's how to get started.
 4. Run the app to verify your setup:
 
    ```bash
-   python pic_resizer.py
+   python twistnshrink.py
    ```
 
 ## Making Changes
@@ -83,7 +83,7 @@ If CI fails on `main`, do not tag or deploy—fix issues and re-verify first.
 
 ## Reporting Issues
 
-- Use [GitHub Issues](https://github.com/bilbilivo/pic_resizer/issues) to report bugs or request features.
+- Use [GitHub Issues](https://github.com/bilbilivo/twistnshrink/issues) to report bugs or request features.
 - Include your OS, Python version, and steps to reproduce.
 
 ## License
