@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 
 ## [Unreleased]
 
+## [2026.8] - 2026-02-28
+
+### Changed
+- Project renamed from `pic_resizer` to **TwistnShrink** across all source files, configuration, documentation, and workflows.
+- GitHub repository moved to `bilbilivo/twistnshrink`; all URLs and references updated.
+- Released Windows executable is now named `twistnshrink.exe` (previously `pic_resizer.exe`).
+
 ## [2026.7] - 2026-02-28
 
 ### Added

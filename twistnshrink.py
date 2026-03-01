@@ -411,7 +411,7 @@ def rotate_images() -> None:
 # ---------------------------------------------------------------------------
 
 PAYPAL_URL = "https://paypal.me/bilbilivo"
-APP_VERSION = "2026.7"
+APP_VERSION = "2026.8"
 
 
 def open_donate() -> None:
