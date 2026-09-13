@@ -35,13 +35,23 @@ Thanks for your interest in contributing! Here's how to get started.
 
 ## Making Changes
 
-1. Create a feature branch from `main`:
+Contributions follow a branch → pull request → approved merge workflow. Do not commit directly to `main`.
+
+1. Start from an up-to-date `main` branch and create a focused feature or fix branch:
 
    ```bash
-   git checkout -b my-feature
+   git checkout main
+   git pull origin main
+   git checkout -b feature/my-feature
    ```
 
-2. Make your changes. Keep commits focused and write clear commit messages.
+2. Make your changes and keep commits focused. Use [Conventional Commits](https://www.conventionalcommits.org/) for every commit, for example:
+
+   ```text
+   feat: add batch image compression
+   fix: preserve EXIF orientation metadata
+   docs: clarify installation instructions
+   ```
 
 3. Run the linter and tests before pushing:
 
@@ -52,7 +62,30 @@ Thanks for your interest in contributing! Here's how to get started.
 
 4. Test your changes manually with a variety of JPEG images (with and without EXIF data, different orientations, different sizes).
 
-5. Push your branch and open a pull request.
+5. Push the branch and open a pull request (PR) against `main`:
+
+   ```bash
+   git push -u origin feature/my-feature
+   ```
+
+6. Ensure all required CI checks pass. Address review feedback and keep the branch current with `main` if requested.
+
+7. Obtain PR approval before merging. Merge only after the PR is approved and all required CI checks are green.
+
+## Documentation-Only Contributions
+
+Documentation changes follow the same branch, PR, CI, approval, and merge process as code changes. Use a `docs:` Conventional Commit and a descriptive branch name, for example:
+
+```bash
+git checkout main
+git pull origin main
+git checkout -b docs/improve-contributing-guide
+git add CONTRIBUTING.md
+git commit -m "docs: clarify documentation contribution workflow"
+git push -u origin docs/improve-contributing-guide
+```
+
+Mark the PR as documentation-only and describe the files changed. Documentation-only changes do not normally require a release tag unless they are intentionally included in a release.
 
 ## Code Style
 
@@ -70,14 +103,22 @@ Thanks for your interest in contributing! Here's how to get started.
 
 ## Release Workflow & Tagging Expectations
 
-Before creating a release (by pushing a tag such as `v2026.2` or a release branch):
+Releases are created only from a merged, approved PR on `main`. After the merge:
 
-1. Push changes to `main` first.
-2. Wait for all CI workflows to complete and ensure they pass (see Actions tab in GitHub).
-3. Only then, create and push a release tag (e.g., `git tag v2026.2 && git push origin v2026.2`).
+1. Wait for CI on the merge commit to complete successfully (see the GitHub Actions tab).
+2. Create and push the version tag from that passing `main` commit:
+
+   ```bash
+   git checkout main
+   git pull origin main
+   git tag v2026.2
+   git push origin v2026.2
+   ```
+
+3. Create the corresponding GitHub release and include release notes.
 
 > **Why?**
-> This ensures releases are only created from a healthy, passing main branch, prevents accidental deployment of broken code, and makes releases easier to audit and roll back.
+> This ensures releases are only created from reviewed, approved, and CI-verified code; it also makes releases easier to audit and roll back.
 
 If CI fails on `main`, do not tag or deploy—fix issues and re-verify first.
 
