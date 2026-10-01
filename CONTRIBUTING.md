@@ -25,7 +25,7 @@ Thanks for your interest in contributing! Here's how to get started.
    pip install ".[dev]"
    ```
 
-3. Make sure `python3-tk` is installed on your system (see [README.md](README.md#installation)).
+3. Make sure `python3-tk` is installed on your system (see [README.md](README.md#quick-start)).
 
 4. Run the app to verify your setup:
 
@@ -70,7 +70,7 @@ Contributions follow a branch → pull request → merge after CI passes. Do not
 
 6. Ensure all required CI checks pass. Address review feedback and keep the branch current with `main` if requested.
 
-7. Merge after all required CI checks pass and review conversations are resolved. GitHub does not require PR approval; ask for a review when another maintainer is available.
+7. Merge after the required `CI Gate` check passes, the branch is up to date with `main`, and all review conversations are resolved. The sole maintainer may merge their own PR without approval from another person. Request a review when another maintainer is available; approval is optional under the current branch protection rules.
 
 ## Documentation-Only Contributions
 
@@ -115,7 +115,7 @@ Releases are created only from a merged PR on `main` after required CI checks pa
    git push origin v2026.2
    ```
 
-3. Create the corresponding GitHub release and include release notes.
+3. The release workflow creates the corresponding GitHub Release with generated release notes and the Windows executable attached.
 
 > **Why?**
 > This ensures releases are only created from code that passed CI on `main`; it also makes releases easier to audit and roll back.

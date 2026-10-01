@@ -45,7 +45,7 @@ The executable will be created at `dist/twistnshrink.exe`. Copy `twistnshrink.in
 
 **Important release workflow best practice:**
 
-> Before pushing a version tag to trigger a release build, always push to `main`, wait for all CI checks to pass (see GitHub Actions), and only then create and push the version tag. This ensures the release is created from a fully tested, healthy main branch.
+> Before pushing a version tag to trigger a release build, merge a pull request into `main` following the [contribution guidelines](CONTRIBUTING.md#making-changes), wait for CI on the merge commit to pass (see GitHub Actions), and only then create and push the version tag from that commit. This ensures the release is created from a fully tested, healthy main branch.
 
 When you push a git tag matching `v*` (e.g., `v2026.1`), the [release workflow](.github/workflows/release.yml) will:
 
