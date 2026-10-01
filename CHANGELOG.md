@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 ## [2026.8] - 2026-02-28
 
 ### Changed
+
 - Project renamed from `pic_resizer` to **TwistnShrink** across all source files, configuration, documentation, and workflows.
 - GitHub repository moved to `bilbilivo/twistnshrink`; all URLs and references updated.
 - Released Windows executable is now named `twistnshrink.exe` (previously `pic_resizer.exe`).
@@ -16,12 +17,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 ## [2026.7] - 2026-02-28
 
 ### Added
+
 - Help menu with **Donate via PayPal** and **About** dialog (clickable PayPal link).
 - `.github/FUNDING.yml` — GitHub Sponsor button linking to PayPal.
 - PayPal donate badge in README.
 - Application icon replaced with monochrome Material Icons "image" icon (Apache 2.0).
 
 ### Fixed
+
 - Progress window close button is now disabled during processing, preventing a crash (`TclError`) if the user dismisses it mid-batch.
 - Numeric inputs (Max Frame Size, Target Size KB) are now validated to be positive before processing begins.
 - Output files that already exist are now skipped with a warning instead of being silently overwritten.
@@ -40,18 +43,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 ## [2026.6] - 2026-02-18
 
 ### Changed
+
 - Dependency management is now handled solely via `pyproject.toml` (PEP 621). `requirements.txt` has been removed and launcher/install documentation and scripts updated. The launcher will upgrade pip to 23.1+ if needed and use `pip install .` for installs. This modernizes and simplifies all future maintenance.
 
 ## [2026.5] - 2026-02-18
 
 ### Fixed
+
 - Linux (GNOME/Ubuntu) app launcher now installs its .desktop file to the correct directory (`~/.local/share/applications/`), ensuring the app can be launched from the Applications menu. The prior approach (leaving the .desktop file in the repo) often failed to register with desktop environments.
+
 ## [2026.4] - 2026-02-18
 
 ### Added
+
 - Comprehensive release workflow documentation in BUILDING.md and CONTRIBUTING.md.
 
 ### Changed
+
 - CI workflow now ignores markdown and documentation files on push and pull request events to improve efficiency.
 - GUI: Shortened window title and aligned resize/rotate section buttons for improved visual consistency.
 
@@ -64,6 +72,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 ## [2026.1] - 2026-02-17
 
 ### Added
+
 - Unit test suite with pytest covering image processing and configuration functions.
 - GitHub Actions CI workflow (lint with ruff, test with pytest on Python 3.9-3.12).
 - GitHub Actions release workflow -- automatically builds Windows `.exe` and publishes to GitHub Releases on tag push.
@@ -78,12 +87,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 - `pyproject.toml` with project metadata and ruff linter configuration.
 
 ### Fixed
+
 - Config file path is now resolved relative to the script location, not the working directory.
 - Rotate operation now reports errors to the user via a dialog instead of silently printing to stdout.
 - Images without EXIF data no longer cause a crash during resize.
 - Rotate operation now preserves EXIF metadata (previously it was silently stripped).
 
 ### Changed
+
 - Minimum Python version bumped from 3.7 to 3.9.
 - Config file is only rewritten when missing keys are detected (previously rewritten on every launch).
 - Default config values are defined in a single place (`DEFAULT_CONFIG` dict) to avoid duplication.
