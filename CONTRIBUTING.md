@@ -35,7 +35,7 @@ Thanks for your interest in contributing! Here's how to get started.
 
 ## Making Changes
 
-Contributions follow a branch → pull request → approved merge workflow. Do not commit directly to `main`.
+Contributions follow a branch → pull request → merge after CI passes. Do not commit directly to `main`.
 
 1. Start from an up-to-date `main` branch and create a focused feature or fix branch:
 
@@ -70,11 +70,11 @@ Contributions follow a branch → pull request → approved merge workflow. Do n
 
 6. Ensure all required CI checks pass. Address review feedback and keep the branch current with `main` if requested.
 
-7. Obtain PR approval before merging. Merge only after the PR is approved and all required CI checks are green.
+7. Merge after all required CI checks pass and review conversations are resolved. GitHub does not require PR approval; ask for a review when another maintainer is available.
 
 ## Documentation-Only Contributions
 
-Documentation changes follow the same branch, PR, CI, approval, and merge process as code changes. Use a `docs:` Conventional Commit and a descriptive branch name, for example:
+Documentation changes follow the same branch, PR, CI, and merge process as code changes. Use a `docs:` Conventional Commit and a descriptive branch name, for example:
 
 ```bash
 git checkout main
@@ -103,7 +103,7 @@ Mark the PR as documentation-only and describe the files changed. Documentation-
 
 ## Release Workflow & Tagging Expectations
 
-Releases are created only from a merged, approved PR on `main`. After the merge:
+Releases are created only from a merged PR on `main` after required CI checks pass. After the merge:
 
 1. Wait for CI on the merge commit to complete successfully (see the GitHub Actions tab).
 2. Create and push the version tag from that passing `main` commit:
@@ -118,7 +118,7 @@ Releases are created only from a merged, approved PR on `main`. After the merge:
 3. Create the corresponding GitHub release and include release notes.
 
 > **Why?**
-> This ensures releases are only created from reviewed, approved, and CI-verified code; it also makes releases easier to audit and roll back.
+> This ensures releases are only created from code that passed CI on `main`; it also makes releases easier to audit and roll back.
 
 If CI fails on `main`, do not tag or deploy—fix issues and re-verify first.
 
