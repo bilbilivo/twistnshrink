@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 
 ### Changed
 
-- Require Python 3.11+ to match Pillow 13 support, and test Python 3.11 through 3.14 in CI.
+- Require Python 3.12+ to match Pillow 13 support, and test Python 3.12 through 3.14 in CI.
 - Use the supported Pillow resampling API for batch resizing.
 
 ## [2026.8] - 2026-02-28
