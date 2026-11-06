@@ -85,7 +85,12 @@ pip install .
 python twistnshrink.py
 ```
 
-Requires Python 3.9+.
+Requires Python 3.11+ and Pillow 13+.
+
+To upgrade an existing source installation, activate its virtual environment and run
+`python -m pip install --upgrade .`. If the environment uses Python 3.10 or older,
+create a new environment with Python 3.11+ first. Windows executable users should
+download the latest release; updating system Python does not update the bundled Pillow.
 
 ## Development
 

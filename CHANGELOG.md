@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 
 ## [Unreleased]
 
+## [2026.9] - 2026-11-05
+
+### Security
+
+- Require Pillow 13.0.0 or newer to fix image decoding and EXIF parsing vulnerabilities, including GHSA-wqgw-9xfh-qf2g and GHSA-q45j-58j2-45rg.
+- Restrict resize and rotate input decoding to JPEG, rejecting other formats renamed with a JPEG extension.
+- Verify the Windows build uses patched Pillow before bundling the executable.
+
+### Changed
+
+- Require Python 3.11+ to match Pillow 13 support, and test Python 3.11 through 3.14 in CI.
+- Use the supported Pillow resampling API for batch resizing.
+
 ## [2026.8] - 2026-02-28
 
 ### Changed

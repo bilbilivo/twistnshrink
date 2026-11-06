@@ -93,13 +93,13 @@ Mark the PR as documentation-only and describe the files changed. Documentation-
 - Run `ruff check .` to lint your code (configuration is in `pyproject.toml`).
 - Add type hints to all function signatures.
 - Add docstrings to all public functions.
-- Keep the codebase compatible with Python 3.9+.
+- Keep the codebase compatible with Python 3.11+.
 
 ## Testing
 
 - Add tests for new logic in the `tests/` directory.
 - Tests use [pytest](https://docs.pytest.org/) -- run with `pytest -v`.
-- CI runs the test suite on Python 3.9, 3.10, 3.11, and 3.12.
+- CI runs the test suite on Python 3.11, 3.12, 3.13, and 3.14.
 
 ## Release Workflow & Tagging Expectations
 

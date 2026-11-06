@@ -84,6 +84,11 @@ jobs:
       - name: Install build dependencies
         run: pip install ".[build]"
 
+      - name: Verify build dependencies
+        run: |
+          pip check
+          python -c "import PIL; print('Bundling Pillow', PIL.__version__); assert int(PIL.__version__.split('.')[0]) >= 13"
+
       - name: Build executable
         run: pyinstaller twistnshrink.spec
 

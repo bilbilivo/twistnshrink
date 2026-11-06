@@ -11,7 +11,6 @@ import io
 import os
 import threading
 import webbrowser
-from typing import Optional
 
 import piexif
 from PIL import ExifTags, Image
@@ -84,8 +83,13 @@ def load_config() -> configparser.ConfigParser:
 # ---------------------------------------------------------------------------
 
 
+def open_jpeg(path: str) -> Image.Image:
+    """Open a JPEG, rejecting other formats even if renamed with a .jpg extension."""
+    return Image.open(path, formats=("JPEG",))
+
+
 def resize_image(
-    img: Image.Image, target_size_kb: float, exif_bytes: Optional[bytes]
+    img: Image.Image, target_size_kb: float, exif_bytes: bytes | None
 ) -> bytes:
     """Iteratively reduce JPEG quality until the image is within *target_size_kb*.
 
@@ -162,7 +166,7 @@ def rotate_image(image: Image.Image, angle: int) -> Image.Image:
     return image
 
 
-def _load_exif_safe(img: Image.Image) -> Optional[bytes]:
+def _load_exif_safe(img: Image.Image) -> bytes | None:
     """Load EXIF data from *img*, returning ``None`` if unavailable.
 
     Handles images that have no EXIF data (or corrupt EXIF) without
@@ -253,7 +257,7 @@ def resize_images() -> None:
                     skipped.append(new_filename)
                     continue
 
-                with Image.open(img_path) as img:
+                with open_jpeg(img_path) as img:
                     img = fix_orientation(img)
 
                     exif_bytes = _load_exif_safe(img)
@@ -266,7 +270,7 @@ def resize_images() -> None:
                         new_height = min(img.height, max_frame_size)
                         new_width = int(new_height * img.width / img.height)
 
-                    resized_img = img.resize((new_width, new_height), Image.LANCZOS)
+                    resized_img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
                     img_data = resize_image(resized_img, target_size_kb, exif_bytes)
 
                 with open(output_path, "wb") as f:
@@ -362,7 +366,7 @@ def rotate_images() -> None:
                     skipped.append(new_filename)
                     continue
 
-                with Image.open(img_path) as img:
+                with open_jpeg(img_path) as img:
                     img = fix_orientation(img)
 
                     # Preserve EXIF data through rotation
@@ -411,7 +415,7 @@ def rotate_images() -> None:
 # ---------------------------------------------------------------------------
 
 PAYPAL_URL = "https://paypal.me/bilbilivo"
-APP_VERSION = "2026.8"
+APP_VERSION = "2026.9"
 
 
 def open_donate() -> None:
