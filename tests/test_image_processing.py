@@ -3,9 +3,10 @@
 import io
 
 import piexif
-from PIL import Image
+import pytest
+from PIL import Image, UnidentifiedImageError
 
-from twistnshrink import _load_exif_safe, fix_orientation, resize_image, rotate_image
+from twistnshrink import _load_exif_safe, fix_orientation, open_jpeg, resize_image, rotate_image
 
 # ---------------------------------------------------------------------------
 # rotate_image tests
@@ -188,3 +189,37 @@ class TestLoadExifSafe:
         img.info["exif"] = b""
         result = _load_exif_safe(img)
         assert result is None
+
+
+class TestOpenJpeg:
+    """Validate JPEG input and reject disguised non-JPEG files before decoding."""
+
+    @pytest.mark.parametrize("image_format", ["TIFF", "PNG", "GIF", "BMP"])
+    def test_rejects_other_formats_renamed_jpg(self, tmp_path, image_format):
+        path = tmp_path / "disguised.jpg"
+        Image.new("RGB", (20, 10), "red").save(path, format=image_format)
+        with pytest.raises(UnidentifiedImageError):
+            open_jpeg(str(path))
+
+    @pytest.mark.parametrize("angle", [90, 180, 270])
+    def test_jpeg_exif_survives_processing(self, tmp_path, angle):
+        path = tmp_path / "photo.jpg"
+        exif = piexif.dump({"0th": {
+            piexif.ImageIFD.Orientation: 6,
+            piexif.ImageIFD.Make: b"TestCamera",
+        }})
+        Image.new("RGB", (200, 100), "blue").save(path, "JPEG", exif=exif)
+        with open_jpeg(str(path)) as source:
+            oriented = fix_orientation(source)
+            assert oriented.size == (100, 200)
+            metadata = _load_exif_safe(oriented)
+            rotated = rotate_image(oriented, angle)
+            resized = rotated.resize((50, 50), Image.Resampling.LANCZOS)
+            output = resize_image(resized, 50, metadata)
+        with Image.open(io.BytesIO(output)) as result:
+            result.load()
+            assert result.format == "JPEG"
+            assert result.size == (50, 50)
+            tags = piexif.load(result.info["exif"])["0th"]
+            assert tags[piexif.ImageIFD.Make] == b"TestCamera"
+            assert piexif.ImageIFD.Orientation not in tags
