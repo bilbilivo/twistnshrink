@@ -20,7 +20,7 @@ dev = [
     "pytest>=7.0",
 ]
 build = [
-    "pyinstaller>=5.0",
+    "pyinstaller>=6.15",
 ]
 
 [tool.pytest.ini_options]

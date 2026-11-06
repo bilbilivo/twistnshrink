@@ -82,12 +82,15 @@ jobs:
           python-version: "3.14"
 
       - name: Install build dependencies
-        run: pip install ".[build]"
+        run: pip install ".[build,dev]"
 
       - name: Verify build dependencies
         run: |
           pip check
           python -c "import PIL; print('Bundling Pillow', PIL.__version__); assert int(PIL.__version__.split('.')[0]) >= 13"
+
+      - name: Test on Windows
+        run: python -m pytest -v
 
       - name: Build executable
         run: pyinstaller twistnshrink.spec
