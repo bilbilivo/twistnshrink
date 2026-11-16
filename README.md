@@ -70,7 +70,6 @@ Users of v2026.9 and older must download the updater-enabled release manually on
 
 ### Settings
 
-
 | Setting | Default | Description |
 |---|---|---|
 | `MaxFrameSize` | `900` | Maximum dimension (px) for the longest side |
