@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/). This pro
 
 ## [Unreleased]
 
+## [2026.10] - 2026-11-15
+
+### Added
+
+- Daily background Windows update checks and a Help menu check/update preference.
+- Verified downloads from GitHub Releases with update-and-restart, backup, and replacement rollback.
+- Windows integration checks using the packaged executable to verify replacement and restart.
+
+### Fixed
+
+- Store Windows settings in Local AppData so they survive restarts and app updates; migrate an existing portable INI.
+- Defer update prompts until image processing completes and prevent closing during processing or updates.
+
 ## [2026.9] - 2026-11-05
 
 ### Security

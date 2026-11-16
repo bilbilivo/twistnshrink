@@ -9,11 +9,18 @@ operations.
 import configparser
 import io
 import os
+import queue
+import shutil
+import sys
 import threading
+import time
 import webbrowser
+from pathlib import Path
 
 import piexif
 from PIL import ExifTags, Image
+
+import updater
 
 try:
     import tkinter as tk
@@ -28,8 +35,13 @@ except ImportError:  # allow importing image-processing helpers without tkinter
 #: Directory that contains this script (used to resolve config path etc.)
 SCRIPT_DIR: str = os.path.dirname(os.path.abspath(__file__))
 
-#: Path to the configuration file (always next to the script).
-CONFIG_FILE: str = os.path.join(SCRIPT_DIR, "twistnshrink.ini")
+#: Persistent settings directory; Windows bundles extract into a temporary directory.
+CONFIG_DIR = (Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+              / "TwistnShrink" if sys.platform == "win32" else Path(SCRIPT_DIR))
+CONFIG_FILE: str = str(CONFIG_DIR / "twistnshrink.ini")
+PROCESSING = 0
+UPDATING = False
+UPDATE_EVENTS = queue.Queue()
 
 #: Default configuration values (single source of truth).
 DEFAULT_CONFIG: dict[str, str] = {
@@ -37,6 +49,8 @@ DEFAULT_CONFIG: dict[str, str] = {
     "TargetSizeKB": "200",
     "FileSuffix": "_resize",
     "RotateAngle": "90",
+    "AutoCheckUpdates": "true",
+    "LastUpdateCheck": "0",
 }
 
 # JPEG quality parameters used by the iterative resize loop.
@@ -56,6 +70,15 @@ def load_config() -> configparser.ConfigParser:
     rewritten when a change was actually needed.
     """
     config = configparser.ConfigParser()
+    # Migrate a portable INI, if one exists beside the executable.
+    if sys.platform == "win32" and not os.path.exists(CONFIG_FILE):
+        legacy = Path(sys.executable).parent / "twistnshrink.ini" if getattr(sys, "frozen", False) else Path(SCRIPT_DIR) / "twistnshrink.ini"
+        if legacy.is_file() and legacy != Path(CONFIG_FILE):
+            try:
+                Path(CONFIG_FILE).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(legacy, CONFIG_FILE)
+            except OSError:
+                pass
     changed = False
 
     if os.path.exists(CONFIG_FILE):
@@ -70,6 +93,7 @@ def load_config() -> configparser.ConfigParser:
 
     if changed:
         try:
+            Path(CONFIG_FILE).parent.mkdir(parents=True, exist_ok=True)
             with open(CONFIG_FILE, "w") as fh:
                 config.write(fh)
         except OSError:
@@ -192,6 +216,9 @@ def _load_exif_safe(img: Image.Image) -> bytes | None:
 
 def resize_images() -> None:
     """Open file/directory pickers and batch-resize the selected images."""
+    if UPDATING:
+        messagebox.showinfo("Update", "Please wait for the update to finish.")
+        return
     input_files = filedialog.askopenfilenames(
         title="Select Images to Resize",
         filetypes=[("JPEG files", "*.jpg *.jpeg")],
@@ -287,6 +314,8 @@ def resize_images() -> None:
                 failures.append(f"{img_path}: {e}")
 
         def finish() -> None:
+            global PROCESSING
+            PROCESSING -= 1
             progress_window.destroy()
             parts = [f"Processed {count}/{total} images successfully."]
             if skipped:
@@ -305,11 +334,16 @@ def resize_images() -> None:
 
         progress_window.after(0, finish)
 
+    global PROCESSING
+    PROCESSING += 1
     threading.Thread(target=process_images, daemon=True).start()
 
 
 def rotate_images() -> None:
     """Open file/directory pickers and batch-rotate the selected images."""
+    if UPDATING:
+        messagebox.showinfo("Update", "Please wait for the update to finish.")
+        return
     input_files = filedialog.askopenfilenames(
         title="Select Images to Rotate",
         filetypes=[("JPEG files", "*.jpg *.jpeg")],
@@ -389,6 +423,8 @@ def rotate_images() -> None:
                 failures.append(f"{img_path}: {e}")
 
         def finish() -> None:
+            global PROCESSING
+            PROCESSING -= 1
             progress_window.destroy()
             parts = [f"Rotated {count}/{total} images successfully."]
             if skipped:
@@ -407,6 +443,8 @@ def rotate_images() -> None:
 
         progress_window.after(0, finish)
 
+    global PROCESSING
+    PROCESSING += 1
     threading.Thread(target=process_images, daemon=True).start()
 
 
@@ -415,7 +453,97 @@ def rotate_images() -> None:
 # ---------------------------------------------------------------------------
 
 PAYPAL_URL = "https://paypal.me/bilbilivo"
-APP_VERSION = "2026.9"
+APP_VERSION = "2026.10"
+
+
+def save_config() -> None:
+    """Persist application preferences outside the executable bundle."""
+    try:
+        Path(CONFIG_FILE).parent.mkdir(parents=True, exist_ok=True)
+        with open(CONFIG_FILE, "w") as stream:
+            config.write(stream)
+    except OSError:
+        pass
+
+
+def toggle_auto_updates() -> None:
+    """Save the Help menu's automatic update preference."""
+    config["DEFAULT"]["AutoCheckUpdates"] = str(auto_update_var.get()).lower()
+    save_config()
+
+
+def check_updates(manual: bool = True) -> None:
+    """Check GitHub without blocking Tk's event loop."""
+    global UPDATING
+    if UPDATING:
+        return
+    UPDATING = True
+
+    def check() -> None:
+        try:
+            UPDATE_EVENTS.put(("checked", (updater.latest_release(APP_VERSION), manual)))
+        except Exception as error:
+            UPDATE_EVENTS.put(("check_error", (str(error), manual)))
+
+    threading.Thread(target=check, daemon=True).start()
+
+
+def poll_updates() -> None:
+    """Handle worker results exclusively on the GUI thread."""
+    global UPDATING
+    try:
+        kind, result = UPDATE_EVENTS.get_nowait()
+    except queue.Empty:
+        root.after(150, poll_updates)
+        return
+    if kind == "checked" and PROCESSING:
+        UPDATE_EVENTS.put((kind, result))
+        root.after(500, poll_updates)
+        return
+    if kind == "checked":
+        release, manual = result
+        UPDATING = False
+        config["DEFAULT"]["LastUpdateCheck"] = str(int(time.time()))
+        save_config()
+        if release is None:
+            if manual:
+                messagebox.showinfo("Updates", "You are using the latest version.")
+        elif not (sys.platform == "win32" and getattr(sys, "frozen", False)):
+            if messagebox.askyesno("Update available", f"{release['version']} is available. Open the download page?"):
+                webbrowser.open("https://github.com/bilbilivo/twistnshrink/releases/latest")
+        elif messagebox.askyesno("Update available", f"{release['version']} is available. Update and restart now?"):
+            UPDATING = True
+            update_status.set("Downloading and verifying update…")
+
+            def install() -> None:
+                try:
+                    updater.start_update(release, CONFIG_DIR / "Updates")
+                    UPDATE_EVENTS.put(("installed", None))
+                except Exception as error:
+                    UPDATE_EVENTS.put(("install_error", str(error)))
+
+            threading.Thread(target=install, daemon=True).start()
+    elif kind == "installed":
+        root.destroy()
+        return
+    elif kind == "check_error":
+        UPDATING = False
+        error, manual = result
+        if manual:
+            messagebox.showerror("Update check failed", error)
+    elif kind == "install_error":
+        UPDATING = False
+        update_status.set("")
+        messagebox.showerror("Update failed", result)
+    root.after(150, poll_updates)
+
+
+def close_app() -> None:
+    """Avoid exiting during image processing or update installation."""
+    if PROCESSING or UPDATING:
+        messagebox.showinfo("Please wait", "Please wait for the current operation to finish.")
+    else:
+        root.destroy()
 
 
 def open_donate() -> None:
@@ -460,12 +588,21 @@ def show_about() -> None:
 def main() -> None:
     """Build the GUI and start the tkinter event loop."""
     global root, config, max_frame_size_entry, target_size_entry, suffix_entry
-    global rotate_angle_var
+    global rotate_angle_var, auto_update_var, update_status
 
     config = load_config()
 
     root = tk.Tk()
     root.title("TwistnShrink")
+    root.protocol("WM_DELETE_WINDOW", close_app)
+    # Only clean stale staging; another running instance may be downloading.
+    if sys.platform == "win32":
+        try:
+            for staging in (CONFIG_DIR / "Updates").glob("update-*"):
+                if not staging.is_symlink() and time.time() - staging.stat().st_mtime > 86400:
+                    shutil.rmtree(staging, ignore_errors=True)
+        except OSError:
+            pass
 
     # Configure style
     style = ttk.Style()
@@ -475,6 +612,11 @@ def main() -> None:
     # Menu bar
     menubar = tk.Menu(root)
     help_menu = tk.Menu(menubar, tearoff=0)
+    help_menu.add_command(label="Check for updates", command=check_updates)
+    auto_update_var = tk.BooleanVar(value=config["DEFAULT"].get("AutoCheckUpdates", "true").lower() == "true")
+    help_menu.add_checkbutton(label="Automatically check for updates", variable=auto_update_var,
+                              command=toggle_auto_updates)
+    help_menu.add_separator()
     help_menu.add_command(label="Donate via PayPal", command=open_donate)
     help_menu.add_separator()
     help_menu.add_command(label="About", command=show_about)
@@ -541,8 +683,19 @@ def main() -> None:
     for child in frame.winfo_children():
         child.grid_configure(padx=5)
 
+    update_status = tk.StringVar()
+    ttk.Label(frame, textvariable=update_status).grid(row=6, column=0, columnspan=2)
+    root.after(150, poll_updates)
+    try:
+        last_check = int(config["DEFAULT"].get("LastUpdateCheck", "0"))
+    except ValueError:
+        last_check = 0
+    if sys.platform == "win32" and auto_update_var.get() and time.time() - last_check >= 86400:
+        root.after(1000, lambda: check_updates(False))
     root.mainloop()
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "--apply-update":
+        sys.exit(updater.apply_update(sys.argv[2:]))
     main()
