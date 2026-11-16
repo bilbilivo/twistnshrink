@@ -51,7 +51,25 @@ Settings are remembered between sessions.
 
 ## Configuration
 
-Settings are stored in `twistnshrink.ini` (created automatically on first run):
+Settings are stored in `twistnshrink.ini` (created automatically on first run).
+On Windows this is `%LOCALAPPDATA%\TwistnShrink\twistnshrink.ini`, so settings
+survive app updates. An existing INI beside the executable is migrated on first
+launch. Linux and macOS retain the INI beside the source script.
+
+### Windows updates
+
+The Windows app checks GitHub Releases in the background once daily. Use
+**Help → Check for updates** to check immediately, or toggle
+**Help → Automatically check for updates** to disable automatic checks.
+Choose **Update and restart** when offered a new version. The app downloads and
+verifies the executable, waits for image processing to finish, then replaces it
+and restarts. Keep the portable app in a writable folder. A `.exe.bak` copy of
+the previous version is retained beside it; failed replacement restores that copy.
+No GitHub account, Python installation, or separate update server is required.
+Users of v2026.9 and older must download the updater-enabled release manually once.
+
+### Settings
+
 
 | Setting | Default | Description |
 |---|---|---|
@@ -59,6 +77,8 @@ Settings are stored in `twistnshrink.ini` (created automatically on first run):
 | `TargetSizeKB` | `200` | Target file size in kilobytes |
 | `FileSuffix` | `_resize` | Suffix appended to output filenames |
 | `RotateAngle` | `90` | Default rotation angle (90, 180, or 270) |
+| `AutoCheckUpdates` | `true` | Check for Windows updates automatically (Help menu) |
+| `LastUpdateCheck` | `0` | Timestamp of the last successful check (managed by the app) |
 
 ## Linux Desktop Launcher
 

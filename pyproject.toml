@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "twistnshrink"
-version = "2026.9"
+version = "2026.10"
 description = "Batch image resizer and rotator with a tkinter GUI"
 readme = "README.md"
 license = {text = "MIT"}
@@ -43,3 +43,6 @@ select = [
 ignore = [
     "E501",  # line too long (handled by formatter)
 ]
+
+[tool.setuptools]
+py-modules = ["twistnshrink", "updater"]

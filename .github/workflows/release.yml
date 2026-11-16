@@ -95,6 +95,9 @@ jobs:
       - name: Build executable
         run: pyinstaller twistnshrink.spec
 
+      - name: Verify packaged update and restart
+        run: python scripts/smoke_windows_update.py dist/twistnshrink.exe
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

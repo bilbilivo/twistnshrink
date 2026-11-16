@@ -72,10 +72,27 @@ jobs:
       - name: Run tests
         run: pytest -v
 
+  windows:
+    name: Windows update integration
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install dependencies
+        run: pip install ".[build,dev]"
+      - name: Run tests
+        run: python -m pytest -v
+      - name: Build Windows executable
+        run: pyinstaller twistnshrink.spec
+      - name: Verify packaged update and restart
+        run: python scripts/smoke_windows_update.py dist/twistnshrink.exe
+
   ci-gate:
     name: CI Gate
     if: always()
-    needs: [docs, workflow-lint, lint, test]
+    needs: [docs, workflow-lint, lint, test, windows]
     runs-on: ubuntu-latest
     steps:
       - name: Verify required jobs passed
@@ -83,9 +100,11 @@ jobs:
           DOCS_RESULT: ${{ needs.docs.result }}
           WORKFLOW_LINT_RESULT: ${{ needs.workflow-lint.result }}
           LINT_RESULT: ${{ needs.lint.result }}
+          WINDOWS_RESULT: ${{ needs.windows.result }}
           TEST_RESULT: ${{ needs.test.result }}
         run: |
           test "$DOCS_RESULT" = "success"
           test "$WORKFLOW_LINT_RESULT" = "success"
           test "$LINT_RESULT" = "success"
           test "$TEST_RESULT" = "success"
+          test "$WINDOWS_RESULT" = "success"

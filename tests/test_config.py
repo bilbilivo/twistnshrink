@@ -99,3 +99,21 @@ class TestLoadConfig:
 
         result = twistnshrink.load_config()
         assert isinstance(result, configparser.ConfigParser)
+
+
+def test_windows_migrates_portable_settings(tmp_path, monkeypatch):
+    """A portable INI is copied once, and subsequent local settings win."""
+    legacy = tmp_path / "portable"
+    legacy.mkdir()
+    (legacy / "twistnshrink.ini").write_text("[DEFAULT]\nMaxFrameSize = 1500\n")
+    destination = tmp_path / "LocalAppData" / "TwistnShrink" / "twistnshrink.ini"
+    monkeypatch.setattr(twistnshrink.sys, "platform", "win32")
+    monkeypatch.setattr(twistnshrink.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(twistnshrink.sys, "executable", str(legacy / "app.exe"))
+    monkeypatch.setattr(twistnshrink, "CONFIG_FILE", str(destination))
+    config = twistnshrink.load_config()
+    assert config["DEFAULT"]["MaxFrameSize"] == "1500"
+    assert config["DEFAULT"]["AutoCheckUpdates"] == "true"
+    assert destination.is_file()
+    (legacy / "twistnshrink.ini").write_text("[DEFAULT]\nMaxFrameSize = 999\n")
+    assert twistnshrink.load_config()["DEFAULT"]["MaxFrameSize"] == "1500"
